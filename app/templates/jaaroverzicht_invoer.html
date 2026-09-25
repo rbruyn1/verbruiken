@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Jaar invoeren{% endblock %}
+{% block content %}
+<h1>{{ "Jaaroverzicht bewerken" if bestaand else "Jaaroverzicht invoeren" }}</h1>
+
+<form class="entry" method="post">
+    <div class="row2">
+        <div>
+            <label>Woning</label>
+            <select name="woning" required>
+                {% for w in woningen %}
+                <option value="{{ w }}" {{ "selected" if (bestaand and bestaand.woning == w) or (woning == w) }}>{{ w }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Jaar</label>
+            <input type="number" name="jaar" value="{{ bestaand.jaar if bestaand else (jaar or '') }}" required>
+        </div>
+    </div>
+
+    {% for veld, label in velden %}
+    <label>{{ label }}</label>
+    {% if veld == "jaarverbruik_gas_eenheid" %}
+    <select name="{{ veld }}">
+        <option value="">–</option>
+        <option value="m3" {{ "selected" if bestaand and bestaand[veld] == "m3" }}>m³</option>
+        <option value="kWh" {{ "selected" if bestaand and bestaand[veld] == "kWh" }}>kWh</option>
+    </select>
+    {% else %}
+    <input type="text" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    {% endif %}
+    {% endfor %}
+
+    <button type="submit">Opslaan</button>
+</form>
+{% endblock %}

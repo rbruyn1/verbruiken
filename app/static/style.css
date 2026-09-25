@@ -1,0 +1,64 @@
+:root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #e0e2e7;
+    --text: #1c1f24;
+    --muted: #6b7280;
+    --accent: #f5a623;
+    --accent-dark: #d68910;
+    --pos: #2e7d32;
+    --neg: #c0392b;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+nav {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+nav a { color: var(--text); text-decoration: none; font-size: 0.95rem; }
+nav a.brand { font-weight: 700; margin-right: auto; }
+nav a:hover { color: var(--accent-dark); }
+main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.flash {
+    background: #fff4e0; border: 1px solid var(--accent);
+    padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem;
+}
+h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--muted); margin-bottom: 1rem; }
+.woning-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.woning-tabs a {
+    padding: 0.4rem 0.9rem; border-radius: 999px; text-decoration: none;
+    border: 1px solid var(--border); color: var(--text); font-size: 0.9rem;
+}
+.woning-tabs a.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; font-size: 0.88rem; }
+th, td { padding: 0.5rem 0.6rem; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { background: #fafbfc; color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+tr:hover { background: #fafbfc; }
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+.muted { color: var(--muted); }
+a.edit { font-size: 0.8rem; color: var(--accent-dark); text-decoration: none; }
+form.entry { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; max-width: 600px; }
+form.entry label { display: block; margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+form.entry input, form.entry select {
+    width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 0.95rem; margin-top: 0.2rem;
+}
+form.entry button {
+    margin-top: 1.25rem; background: var(--accent); color: #fff; border: none;
+    padding: 0.6rem 1.4rem; border-radius: 6px; font-size: 0.95rem; cursor: pointer;
+}
+form.entry button:hover { background: var(--accent-dark); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }

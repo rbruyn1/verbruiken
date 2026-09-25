@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verbruik — {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}" class="brand">⚡ Verbruik</a>
+        <a href="{{ url_for('index') }}">Maandoverzicht</a>
+        <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
+        <a href="{{ url_for('invoer') }}">+ Maand invoeren</a>
+        <a href="{{ url_for('jaaroverzicht_invoer') }}">+ Jaar invoeren</a>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

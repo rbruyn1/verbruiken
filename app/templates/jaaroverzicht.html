@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Jaaroverzicht{% endblock %}
+{% block content %}
+<h1>Jaaroverzicht — {{ woning }}</h1>
+<p class="subtitle">Jaartotalen en vergelijkingen (los van de maandelijkse invoer).</p>
+
+<div class="woning-tabs">
+    {% for w in woningen %}
+        <a href="{{ url_for('jaaroverzicht', woning=w) }}" class="{{ 'active' if w == woning }}">{{ w }}</a>
+    {% endfor %}
+</div>
+
+{% if not records %}
+    <p class="muted">Nog geen jaaroverzicht voor {{ woning }}. <a href="{{ url_for('jaaroverzicht_invoer') }}">Voeg een jaar toe</a>.</p>
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th>Jaar</th>
+            <th>Elek. kWh</th>
+            <th>Elek. €</th>
+            <th>Elek. €/maand</th>
+            <th>Gas</th>
+            <th>Gas €</th>
+            <th>Gas €/maand</th>
+            <th>Opladen zon kWh</th>
+            <th>Uitgespaard €</th>
+            <th>Batterij kWh / €</th>
+            <th>Δ gas vs -1j</th>
+            <th>Δ elek vs -1j</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.jaar }}</td>
+            <td>{{ "%.0f"|format(r.jaarverbruik_elektriciteit_kwh) if r.jaarverbruik_elektriciteit_kwh is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.jaarverbruik_elektriciteit_kost_eur) if r.jaarverbruik_elektriciteit_kost_eur is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.gem_maand_elektriciteit) if r.gem_maand_elektriciteit is not none else "–" }}</td>
+            <td>{{ r.jaarverbruik_gas ~ " " ~ (r.jaarverbruik_gas_eenheid or "") if r.jaarverbruik_gas is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.jaarverbruik_gas_kost_eur) if r.jaarverbruik_gas_kost_eur is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.gem_maand_gas) if r.gem_maand_gas is not none else "–" }}</td>
+            <td>{{ "%.0f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}</td>
+            <td>
+                {{ "%.0f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }} /
+                {{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}
+            </td>
+            <td>{{ "%.1f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}</td>
+            <td>{{ "%.0f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}</td>
+            <td><a class="edit" href="{{ url_for('jaaroverzicht_invoer', woning=r.woning, jaar=r.jaar) }}">bewerk</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}

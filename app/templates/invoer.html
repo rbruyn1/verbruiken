@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Maand invoeren{% endblock %}
+{% block content %}
+<h1>{{ "Maand bewerken" if bestaand else "Maand invoeren" }}</h1>
+
+<form class="entry" method="post">
+    <div class="row2">
+        <div>
+            <label>Woning</label>
+            <select name="woning" required>
+                {% for w in woningen %}
+                <option value="{{ w }}" {{ "selected" if (bestaand and bestaand.woning == w) or (woning == w) }}>{{ w }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div></div>
+        <div>
+            <label>Jaar</label>
+            <input type="number" name="jaar" value="{{ bestaand.jaar if bestaand else (jaar or '') }}" required>
+        </div>
+        <div>
+            <label>Maand (1-12)</label>
+            <input type="number" name="maand" min="1" max="12" value="{{ bestaand.maand if bestaand else (maand or '') }}" required>
+        </div>
+    </div>
+
+    {% for veld, label in velden %}
+    <label>{{ label }}</label>
+    <input type="text" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    {% endfor %}
+
+    <button type="submit">Opslaan</button>
+</form>
+{% endblock %}
