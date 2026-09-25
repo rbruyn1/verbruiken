@@ -5,6 +5,29 @@ from calculations import verrijk, jaaroverzicht_gem_per_maand
 app = Flask(__name__)
 app.secret_key = "verbruik-addon"  # lokale HA add-on, geen publieke login
 
+
+class IngressPrefixMiddleware:
+    """HA Supervisor stuurt ingress-requests door achter een dynamisch pad
+    (/api/hassio_ingress/<token>/...), meegegeven via de X-Ingress-Path
+    header. Zonder dit zet Flask's url_for() (en dus alle nav-links)
+    root-relatieve paden neer die uit de ingress-iframe breken en in de
+    kale HA-interface belanden."""
+
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        script_name = environ.get("HTTP_X_INGRESS_PATH", "")
+        if script_name:
+            environ["SCRIPT_NAME"] = script_name
+            path_info = environ.get("PATH_INFO", "")
+            if path_info.startswith(script_name):
+                environ["PATH_INFO"] = path_info[len(script_name):]
+        return self.wsgi_app(environ, start_response)
+
+
+app.wsgi_app = IngressPrefixMiddleware(app.wsgi_app)
+
 WONINGEN = ["Tienen", "Binkom"]
 MAANDNAMEN = ["", "jan", "feb", "mrt", "apr", "mei", "jun",
               "jul", "aug", "sep", "okt", "nov", "dec"]

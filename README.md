@@ -36,6 +36,10 @@ Zet het xlsx-bestand vooraf ergens bereikbaar in de container (bv. via de
     python3 main.py
     # open http://localhost:8099
 
+## Changelog
+
+Zie [CHANGELOG.md](verbruik_addon/CHANGELOG.md).
+
 ## Structuur
 
 - `app/models.py` — SQLite-schema (maandverbruik, jaaroverzicht)
