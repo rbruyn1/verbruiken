@@ -1,5 +1,5 @@
 name: "Verbruik Tienen/Binkom"
-version: "0.1.1"
+version: "0.1.2"
 slug: "verbruik_addon"
 description: "Maandelijkse en jaarlijkse energie/water/gas-registratie voor Tienen en Binkom"
 arch:
@@ -8,6 +8,7 @@ arch:
   - armv7
 startup: application
 boot: auto
+init: false
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:flash
