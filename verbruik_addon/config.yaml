@@ -1,5 +1,5 @@
 name: "Verbruik Tienen/Binkom"
-version: "0.1.0"
+version: "0.1.1"
 slug: "verbruik_addon"
 description: "Maandelijkse en jaarlijkse energie/water/gas-registratie voor Tienen en Binkom"
 arch:
