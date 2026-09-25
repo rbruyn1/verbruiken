@@ -5,11 +5,18 @@ van beide woningen (Tienen en Binkom), gebaseerd op nettarieven_2023.xlsx.
 
 ## Installatie als HA add-on
 
-1. Kopieer deze hele map naar `/addons/verbruik_addon/` op je HA-instantie
-   (via Samba-share of de SSH/terminal add-on).
-2. Ga in HA naar Instellingen → Add-ons → Add-on store → vernieuw (⋮ rechtsboven).
-3. De add-on verschijnt onder "Local add-ons" → installeren → starten.
-4. Via ingress verschijnt "Verbruik" in het linkermenu van HA.
+**Via de Add-on Store (aanbevolen, nu de repo-structuur klopt):**
+
+1. Instellingen → Add-ons → Add-on Store → ⋮ → Repositories.
+2. Voeg toe: `https://github.com/rbruyn1/verbruiken`
+3. Vernieuw de store. De add-on "Verbruik Tienen/Binkom" verschijnt onderaan.
+4. Installeren → starten. Via ingress verschijnt "Verbruik" in het linkermenu.
+
+**Alternatief — rechtstreeks kopiëren (werkt ook bij een privé-repo):**
+
+Kopieer de map `verbruik_addon/` naar `/addons/verbruik_addon/` op je HA
+(via Samba-share of de SSH/terminal add-on), en vernieuw de Add-on Store.
+Hij verschijnt dan onder "Local add-ons".
 
 ## Eenmalige migratie van je bestaande Excel
 
