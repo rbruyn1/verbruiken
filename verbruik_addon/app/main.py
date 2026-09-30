@@ -30,7 +30,7 @@ class IngressPrefixMiddleware:
 
 app.wsgi_app = IngressPrefixMiddleware(app.wsgi_app)
 
-WONINGEN = ["Tienen", "Binkom"]
+WONINGEN = ["Binkom", "Tienen"]
 MAANDNAMEN = ["", "jan", "feb", "mrt", "apr", "mei", "jun",
               "jul", "aug", "sep", "okt", "nov", "dec"]
 

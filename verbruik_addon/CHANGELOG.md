@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+- Binkom staat nu als eerste tab en is de standaardweergave (was Tienen)
+  — logisch gezien de aankomende verhuis.
+
 ## 0.1.6
 - Nieuw: "Grafieken"-pagina, dezelfde 3 grafieken als in de originele
   Excel — gasverbruik (bar), elektriciteitsverbruik piek+dal gestapeld
