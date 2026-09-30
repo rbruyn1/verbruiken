@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6
+- Nieuw: "Grafieken"-pagina, dezelfde 3 grafieken als in de originele
+  Excel — gasverbruik (bar), elektriciteitsverbruik piek+dal gestapeld
+  (bar), en verschil -1 jaar elektriciteit/gas (lijn). Binkom toont
+  geen gasgrafiek (geen gasaansluiting). Chart.js is lokaal gebundeld
+  (`static/vendor/chart.min.js`), geen CDN-afhankelijkheid.
+
 ## 0.1.5
 - Nieuw: "Data herstellen"-pagina (rechtsboven in de nav) om de
   meegeleverde, al-gemigreerde databank alsnog te herstellen als de

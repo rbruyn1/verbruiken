@@ -272,6 +272,43 @@ def herstel_seed():
     )
 
 
+@app.route("/grafieken")
+def grafieken():
+    woning = request.args.get("woning", WONINGEN[0])
+    records = _get_records(woning)  # al chronologisch (jaar, maand) gesorteerd
+    by_key = {(r["jaar"], r["maand"]): r for r in records}
+
+    labels = []
+    piek, dal = [], []
+    gas = []
+    verschil_elek, verschil_gas = [], []
+    heeft_gas = any(r.get("gas_kwh") is not None for r in records)
+
+    for r in records:
+        labels.append(f"{MAANDNAMEN[r['maand']]}-{str(r['jaar'])[2:]}")
+        piek.append(r.get("piek_verbruik"))
+        dal.append(r.get("dal_verbruik"))
+        gas.append(r.get("gas_kwh"))
+
+        vorig = by_key.get((r["jaar"] - 1, r["maand"]))
+        enriched = verrijk(r, vorig)
+        verschil_elek.append(enriched.get("verschil_vorig_jaar_elektriciteit"))
+        verschil_gas.append(enriched.get("verschil_vorig_jaar_gas"))
+
+    return render_template(
+        "grafieken.html",
+        woningen=WONINGEN,
+        woning=woning,
+        heeft_gas=heeft_gas,
+        labels=labels,
+        piek=piek,
+        dal=dal,
+        gas=gas,
+        verschil_elek=verschil_elek,
+        verschil_gas=verschil_gas,
+    )
+
+
 if __name__ == "__main__":
     init_db()
     debug = os.environ.get("VERBRUIK_DEBUG") == "1"

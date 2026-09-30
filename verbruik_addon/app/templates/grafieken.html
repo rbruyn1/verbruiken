@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Grafieken{% endblock %}
+{% block content %}
+<h1>Grafieken — {{ woning }}</h1>
+<p class="subtitle">Zelfde grafieken als in de originele Excel.</p>
+
+<div class="woning-tabs">
+    {% for w in woningen %}
+        <a href="{{ url_for('grafieken', woning=w) }}" class="{{ 'active' if w == woning }}">{{ w }}</a>
+    {% endfor %}
+</div>
+
+{% if not labels %}
+    <p class="muted">Nog geen data voor {{ woning }}.</p>
+{% else %}
+<div class="chart-grid">
+    {% if heeft_gas %}
+    <div class="chart-card">
+        <canvas id="gasChart"></canvas>
+    </div>
+    {% endif %}
+    <div class="chart-card">
+        <canvas id="elekChart"></canvas>
+    </div>
+    <div class="chart-card {{ 'full' if not heeft_gas }}">
+        <canvas id="verschilChart"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='vendor/chart.min.js') }}"></script>
+<script>
+const labels = {{ labels | tojson }};
+const piek = {{ piek | tojson }};
+const dal = {{ dal | tojson }};
+const gas = {{ gas | tojson }};
+const verschilElek = {{ verschil_elek | tojson }};
+const verschilGas = {{ verschil_gas | tojson }};
+const heeftGas = {{ heeft_gas | tojson }};
+
+Chart.defaults.color = "#6b7280";
+Chart.defaults.borderColor = "#e0e2e7";
+
+if (heeftGas) {
+    new Chart(document.getElementById("gasChart"), {
+        type: "bar",
+        data: { labels: labels, datasets: [
+            { label: "Gas kWh", data: gas, backgroundColor: "#f5a623" }
+        ]},
+        options: {
+            responsive: true,
+            plugins: { title: { display: true, text: "Gasverbruik", color: "#1c1f24", font: { size: 16 } } },
+            scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
+        }
+    });
+}
+
+new Chart(document.getElementById("elekChart"), {
+    type: "bar",
+    data: { labels: labels, datasets: [
+        { label: "Piek verbruik", data: piek, backgroundColor: "#3576c9", stack: "verbruik" },
+        { label: "Dal verbruik", data: dal, backgroundColor: "#f5a623", stack: "verbruik" }
+    ]},
+    options: {
+        responsive: true,
+        plugins: { title: { display: true, text: "Elektriciteitsverbruik", color: "#1c1f24", font: { size: 16 } } },
+        scales: { x: { stacked: true, ticks: { maxRotation: 90, minRotation: 90 } }, y: { stacked: true } }
+    }
+});
+
+new Chart(document.getElementById("verschilChart"), {
+    type: "line",
+    data: { labels: labels, datasets: [
+        { label: "verschil -1 jaar elektriciteit", data: verschilElek, borderColor: "#3576c9", backgroundColor: "#3576c9", tension: 0.15, pointRadius: 2 },
+        ...(heeftGas ? [{ label: "verschil -1 jaar gas", data: verschilGas, borderColor: "#f5a623", backgroundColor: "#f5a623", tension: 0.15, pointRadius: 2 }] : [])
+    ]},
+    options: {
+        responsive: true,
+        plugins: { title: { display: true, text: "verschil -1 jaar (negatief is minder verbruikt)", color: "#1c1f24", font: { size: 16 } } },
+        scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
+    }
+});
+</script>
+{% endblock %}

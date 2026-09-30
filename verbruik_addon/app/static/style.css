@@ -62,3 +62,18 @@ form.entry button {
 }
 form.entry button:hover { background: var(--accent-dark); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+.chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+}
+.chart-card.full { grid-column: 1 / -1; }
+@media (max-width: 800px) {
+    .chart-grid { grid-template-columns: 1fr; }
+}
