@@ -26,9 +26,48 @@
 
     {% for veld, label in velden %}
     <label>{{ label }}</label>
-    <input type="text" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
     {% endfor %}
 
     <button type="submit">Opslaan</button>
+    <p class="muted" style="margin-top:0.75rem; font-size:0.8rem;">
+        Tip: "Totaal afname/export" vult zich automatisch (piek+dal) terwijl je typt.
+        Tik je er zelf iets in, dan stopt de auto-invulling voor dat veld —
+        dubbelklik erop om terug naar auto te schakelen.
+    </p>
 </form>
+
+<script>
+// Auto-berekening totaal afname/export = piek + dal, zolang het
+// doelveld niet handmatig door de gebruiker is aangepast. Zodra iemand
+// zelf in het totaal-veld tikt, stopt de auto-overschrijving voor dat
+// veld (bv. om een afwijkend factuurcijfer in te vullen).
+function koppelAutoTotaal(piekId, dalId, totaalId) {
+    const piek = document.getElementById(piekId);
+    const dal = document.getElementById(dalId);
+    const totaal = document.getElementById(totaalId);
+    if (!piek || !dal || !totaal) return;
+
+    let handmatigAangepast = totaal.value.trim() !== "";
+
+    function herbereken() {
+        if (handmatigAangepast) return;
+        const p = parseFloat(piek.value.replace(",", ".")) || 0;
+        const d = parseFloat(dal.value.replace(",", ".")) || 0;
+        if (piek.value.trim() === "" && dal.value.trim() === "") {
+            totaal.value = "";
+        } else {
+            totaal.value = (p + d).toFixed(3).replace(/\.?0+$/, "");
+        }
+    }
+
+    piek.addEventListener("input", herbereken);
+    dal.addEventListener("input", herbereken);
+    totaal.addEventListener("input", () => { handmatigAangepast = true; });
+    // dubbelklik op het totaal-veld: terugschakelen naar auto-modus
+    totaal.addEventListener("dblclick", () => { handmatigAangepast = false; herbereken(); });
+}
+koppelAutoTotaal("piek_verbruik", "dal_verbruik", "totaal_verbruik_afname");
+koppelAutoTotaal("piek_export", "dal_export", "totaal_export");
+</script>
 {% endblock %}

@@ -13,6 +13,7 @@
         <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
         <a href="{{ url_for('invoer') }}">+ Maand invoeren</a>
         <a href="{{ url_for('jaaroverzicht_invoer') }}">+ Jaar invoeren</a>
+        <a href="{{ url_for('herstel_seed') }}" style="margin-left:auto; color:var(--muted); font-size:0.85rem;">Data herstellen</a>
     </nav>
     <main>
         {% with messages = get_flashed_messages() %}

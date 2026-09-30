@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+from pathlib import Path
+import os
 from models import get_connection, init_db
 from calculations import verrijk, jaaroverzicht_gem_per_maand
 
@@ -37,8 +39,8 @@ MAAND_INVOERVELDEN = [
     ("dal_verbruik", "Dal verbruik (kWh)"),
     ("piek_export", "Piek export (kWh)"),
     ("dal_export", "Dal export (kWh)"),
-    ("totaal_verbruik_afname", "Totaal verbruik / afname (kWh) — factuurcijfer Engie"),
-    ("totaal_export", "Totaal export (kWh) — factuurcijfer Engie"),
+    ("totaal_verbruik_afname", "Totaal verbruik / afname (kWh) — auto = piek+dal, overschrijfbaar bij afwijkend factuurcijfer"),
+    ("totaal_export", "Totaal export (kWh) — auto = piek+dal, overschrijfbaar bij afwijkend factuurcijfer"),
     ("zonopbrengst_totaal", "Zonopbrengst totaal (kWh)"),
     ("batterij_laden", "Batterij laden (kWh)"),
     ("batterij_ontladen", "Batterij ontladen (kWh)"),
@@ -235,8 +237,42 @@ def jaaroverzicht_invoer(woning=None, jaar=None):
     )
 
 
+@app.route("/beheer/herstel-seed", methods=["GET", "POST"])
+def herstel_seed():
+    import shutil
+    seed_path = Path(__file__).parent / "data" / "verbruik.db"
+    huidige_path = Path(os.environ.get("VERBRUIK_DB", seed_path))
+
+    if request.method == "POST":
+        if not seed_path.exists():
+            flash("Geen meegeleverde seed-databank gevonden in de image.")
+            return redirect(url_for("herstel_seed"))
+        if huidige_path.resolve() != seed_path.resolve():
+            backup = huidige_path.with_suffix(".voor-herstel.db")
+            if huidige_path.exists():
+                shutil.copy2(huidige_path, backup)
+            shutil.copy2(seed_path, huidige_path)
+            flash(
+                f"Meegeleverde data hersteld. Vorige inhoud staat als backup in {backup.name}."
+            )
+        else:
+            flash("Huidige databank is al de meegeleverde seed — niets te doen.")
+        return redirect(url_for("index"))
+
+    huidig_aantal = 0
+    if huidige_path.exists():
+        conn = get_connection()
+        huidig_aantal = conn.execute("SELECT COUNT(*) AS n FROM maandverbruik").fetchone()["n"]
+        conn.close()
+
+    return render_template(
+        "herstel_seed.html",
+        huidig_aantal=huidig_aantal,
+        seed_bestaat=seed_path.exists(),
+    )
+
+
 if __name__ == "__main__":
-    import os
     init_db()
     debug = os.environ.get("VERBRUIK_DEBUG") == "1"
     app.run(host="0.0.0.0", port=8099, debug=debug)

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Data herstellen{% endblock %}
+{% block content %}
+<h1>Meegeleverde data herstellen</h1>
+<p class="subtitle">
+    Kopieert de bij deze add-on-versie meegeleverde (al-gemigreerde) databank
+    naar de actieve databank. Je huidige gegevens worden eerst automatisch
+    als backup weggeschreven.
+</p>
+
+{% if not seed_bestaat %}
+    <p class="muted">Geen meegeleverde seed-databank gevonden in deze image.</p>
+{% else %}
+    <p>Actieve databank bevat momenteel <strong>{{ huidig_aantal }}</strong> maandrecords.</p>
+    <form class="entry" method="post" style="max-width:420px">
+        <button type="submit">Herstel meegeleverde data nu</button>
+    </form>
+{% endif %}
+{% endblock %}

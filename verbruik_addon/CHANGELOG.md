@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.5
+- Nieuw: "Data herstellen"-pagina (rechtsboven in de nav) om de
+  meegeleverde, al-gemigreerde databank alsnog te herstellen als de
+  actieve databank leeg/onvolledig bleek (bv. door test-invoer vóór de
+  0.1.4-seedfix). Maakt eerst een backup van de huidige inhoud.
+- "Totaal verbruik/afname" en "totaal export" in het maand-invoerformulier
+  vullen zich nu automatisch (piek+dal) terwijl je typt, blijven wel
+  overschrijfbaar voor een afwijkend factuurcijfer (dubbelklik = terug
+  naar auto).
+
 ## 0.1.4
 - Fix: meegeleverde, al-gemigreerde databank werd genegeerd op een verse
   install — `/data/verbruik.db` (persistente map) bleef leeg terwijl de
