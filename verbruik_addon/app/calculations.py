@@ -75,6 +75,6 @@ def verrijk(rec, vorig_jaar_rec=None):
 
 
 def jaaroverzicht_gem_per_maand(jaartotaal, aantal_maanden_met_data):
-    if not aantal_maanden_met_data:
+    if not aantal_maanden_met_data or jaartotaal is None:
         return None
     return jaartotaal / aantal_maanden_met_data

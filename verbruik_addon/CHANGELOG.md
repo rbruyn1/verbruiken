@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.8
+- Jaaroverzicht-data uit de Excel gemigreerd (Tienen 2021-2026, Binkom
+  2025-2026) — stond verspreid als losse cellen tussen de maandrijen,
+  nu overgenomen in de jaaroverzicht-tabel. Zie
+  `app/migrate_jaaroverzicht.py` voor de precieze celverwijzingen en
+  onderbouwing.
+  - Tienen 2021 en 2022 hebben geen "verschil -1 jaar"-cijfers: de
+    enige cellen die daarvoor in aanmerking kwamen droegen een
+    foutief/verouderd label ("2022-2023" in een rij die 2021 of 2022
+    voorstelt) en zijn daarom bewust weggelaten i.p.v. gegokt.
+  - Binkoms "verschil elektriciteit"-cijfer voor 2026 is letterlijk
+    gelabeld "2024-2026" in de Excel (2-jaars-span) — ongewijzigd
+    overgenomen.
+- Bugfix: jaaroverzicht-pagina crashte op een jaar zonder ingevulde
+  gas- of zonopladen-kost (None / aantal-maanden deling).
+
 ## 0.1.7
 - Binkom staat nu als eerste tab en is de standaardweergave (was Tienen)
   — logisch gezien de aankomende verhuis.
