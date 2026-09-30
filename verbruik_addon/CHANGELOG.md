@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+- Fix: meegeleverde, al-gemigreerde databank werd genegeerd op een verse
+  install — `/data/verbruik.db` (persistente map) bleef leeg terwijl de
+  data wél in de image zat. `run.sh` seedt nu eenmalig vanuit de
+  meegeleverde databank als `/data` nog leeg is.
+
 ## 0.1.3
 - Fix: nav-links braken uit de ingress-iframe naar de kale HA-interface
   (Flask respecteerde de `X-Ingress-Path`-header van Supervisor niet).
