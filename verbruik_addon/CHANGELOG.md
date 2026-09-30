@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9
+- "Verschil -1 jaar" (elektriciteit en gas) wordt nu, als er geen losse
+  Excel-notitie voor was, automatisch berekend uit de al-ingevoerde
+  maanddata (dit jaar t.o.v. vorig jaar). Vult zo Tienen 2021 en 2022
+  aan. Berekende waarden krijgen een `*` met tooltip ter onderscheid
+  van de rechtstreeks uit de Excel overgenomen cijfers.
+
 ## 0.1.8
 - Jaaroverzicht-data uit de Excel gemigreerd (Tienen 2021-2026, Binkom
   2025-2026) — stond verspreid als losse cellen tussen de maandrijen,

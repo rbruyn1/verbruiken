@@ -13,6 +13,7 @@
 {% if not records %}
     <p class="muted">Nog geen jaaroverzicht voor {{ woning }}. <a href="{{ url_for('jaaroverzicht_invoer') }}">Voeg een jaar toe</a>.</p>
 {% else %}
+<p class="muted" style="font-size:0.8rem;">* = berekend uit de maandelijkse invoer (dit jaar t.o.v. vorig jaar), stond niet als losse notitie in de Excel.</p>
 <table>
     <thead>
         <tr>
@@ -47,8 +48,14 @@
                 {{ "%.0f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }} /
                 {{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}
             </td>
-            <td>{{ "%.1f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}</td>
-            <td>{{ "%.0f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}</td>
+            <td>
+                {{ "%.1f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}
+                {% if r._verschil_gas_m3_berekend %}<span class="muted" title="Berekend uit maanddata, niet uit de Excel-notitie">*</span>{% endif %}
+            </td>
+            <td>
+                {{ "%.0f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}
+                {% if r._verschil_elek_berekend %}<span class="muted" title="Berekend uit maanddata, niet uit de Excel-notitie">*</span>{% endif %}
+            </td>
             <td><a class="edit" href="{{ url_for('jaaroverzicht_invoer', woning=r.woning, jaar=r.jaar) }}">bewerk</a></td>
         </tr>
         {% endfor %}
