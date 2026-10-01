@@ -74,6 +74,10 @@ form.entry button:hover { background: var(--accent-dark); }
     padding: 1rem;
 }
 .chart-card.full { grid-column: 1 / -1; }
+/* Bij een oneven aantal grafieken (bv. geen gas bij Binkom: 3 i.p.v. 4)
+   krijgt de laatste automatisch de volle breedte, zodat er geen lege
+   plek in de grid overblijft — werkt voor eender welk aantal kaarten. */
+.chart-grid .chart-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
 @media (max-width: 800px) {
     .chart-grid { grid-template-columns: 1fr; }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+- Fix: grafiekenlayout bij Binkom (geen gas → 3 i.p.v. 4 grafieken) liet
+  een lege plek in de grid. Nu count-onafhankelijk: de laatste grafiek
+  krijgt automatisch de volle breedte bij een oneven aantal.
+
 ## 0.2.0
 - Grafieken-pagina: maandtabel toegevoegd onderaan (zelfde als op
   Maandoverzicht), en een nieuwe "Jaartotalen"-grafiek (elektriciteit
