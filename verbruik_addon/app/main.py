@@ -94,13 +94,60 @@ def _enriched_records(woning):
 @app.route("/")
 def index():
     woning = request.args.get("woning", WONINGEN[0])
+    records = _get_records(woning)  # al chronologisch (jaar, maand) gesorteerd
+    by_key = {(r["jaar"], r["maand"]): r for r in records}
+
+    labels = []
+    piek, dal = [], []
+    gas = []
+    verschil_elek, verschil_gas = [], []
+    heeft_gas = any(r.get("gas_kwh") is not None for r in records)
+
+    for r in records:
+        labels.append(f"{MAANDNAMEN[r['maand']]}-{str(r['jaar'])[2:]}")
+        piek.append(r.get("piek_verbruik"))
+        dal.append(r.get("dal_verbruik"))
+        gas.append(r.get("gas_kwh"))
+
+        vorig = by_key.get((r["jaar"] - 1, r["maand"]))
+        enriched = verrijk(r, vorig)
+        verschil_elek.append(enriched.get("verschil_vorig_jaar_elektriciteit"))
+        verschil_gas.append(enriched.get("verschil_vorig_jaar_gas"))
+
     return render_template(
         "index.html",
         woningen=WONINGEN,
         woning=woning,
-        records=_enriched_records(woning),
+        heeft_gas=heeft_gas,
+        labels=labels,
+        piek=piek,
+        dal=dal,
+        gas=gas,
+        verschil_elek=verschil_elek,
+        verschil_gas=verschil_gas,
+        maandrecords=_enriched_records(woning),
         maandnamen=MAANDNAMEN,
+        **_jaartotalen(woning),
     )
+
+
+def _jaartotalen(woning):
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT jaar,
+                  SUM(totaal_verbruik_afname) as elek,
+                  SUM(gas_kwh) as gas,
+                  SUM(zonopbrengst_totaal) as zon
+           FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
+        (woning,),
+    ).fetchall()
+    conn.close()
+    return {
+        "jaar_labels": [str(r["jaar"]) for r in rows],
+        "jaar_elektriciteit": [r["elek"] for r in rows],
+        "jaar_gas": [r["gas"] for r in rows],
+        "jaar_zon": [r["zon"] for r in rows],
+    }
 
 
 @app.route("/invoer", methods=["GET", "POST"])
@@ -315,61 +362,8 @@ def herstel_seed():
 
 @app.route("/grafieken")
 def grafieken():
-    woning = request.args.get("woning", WONINGEN[0])
-    records = _get_records(woning)  # al chronologisch (jaar, maand) gesorteerd
-    by_key = {(r["jaar"], r["maand"]): r for r in records}
-
-    labels = []
-    piek, dal = [], []
-    gas = []
-    verschil_elek, verschil_gas = [], []
-    heeft_gas = any(r.get("gas_kwh") is not None for r in records)
-
-    for r in records:
-        labels.append(f"{MAANDNAMEN[r['maand']]}-{str(r['jaar'])[2:]}")
-        piek.append(r.get("piek_verbruik"))
-        dal.append(r.get("dal_verbruik"))
-        gas.append(r.get("gas_kwh"))
-
-        vorig = by_key.get((r["jaar"] - 1, r["maand"]))
-        enriched = verrijk(r, vorig)
-        verschil_elek.append(enriched.get("verschil_vorig_jaar_elektriciteit"))
-        verschil_gas.append(enriched.get("verschil_vorig_jaar_gas"))
-
-    return render_template(
-        "grafieken.html",
-        woningen=WONINGEN,
-        woning=woning,
-        heeft_gas=heeft_gas,
-        labels=labels,
-        piek=piek,
-        dal=dal,
-        gas=gas,
-        verschil_elek=verschil_elek,
-        verschil_gas=verschil_gas,
-        maandrecords=_enriched_records(woning),
-        maandnamen=MAANDNAMEN,
-        **_jaartotalen(woning),
-    )
-
-
-def _jaartotalen(woning):
-    conn = get_connection()
-    rows = conn.execute(
-        """SELECT jaar,
-                  SUM(totaal_verbruik_afname) as elek,
-                  SUM(gas_kwh) as gas,
-                  SUM(zonopbrengst_totaal) as zon
-           FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
-        (woning,),
-    ).fetchall()
-    conn.close()
-    return {
-        "jaar_labels": [str(r["jaar"]) for r in rows],
-        "jaar_elektriciteit": [r["elek"] for r in rows],
-        "jaar_gas": [r["gas"] for r in rows],
-        "jaar_zon": [r["zon"] for r in rows],
-    }
+    # Grafieken zijn samengevoegd met de hoofdpagina — oude links blijven werken.
+    return redirect(url_for("index", **request.args))
 
 
 if __name__ == "__main__":

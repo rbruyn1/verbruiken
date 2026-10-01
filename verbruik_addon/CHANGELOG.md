@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+- Maandoverzicht en Grafieken samengevoegd tot één startpagina ("/").
+  De aparte "Maandoverzicht"-tab is weg; "Grafieken" als los item ook
+  (alles staat nu op de hoofdpagina). Oude `/grafieken`-links blijven
+  werken via een redirect.
+
 ## 0.2.1
 - Fix: grafiekenlayout bij Binkom (geen gas → 3 i.p.v. 4 grafieken) liet
   een lege plek in de grid. Nu count-onafhankelijk: de laatste grafiek
