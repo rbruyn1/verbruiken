@@ -62,4 +62,11 @@
     </tbody>
 </table>
 {% endif %}
+
+<h2 style="font-size:1.1rem; margin-top:2rem;">Maandoverzicht</h2>
+{% if maandrecords %}
+    {% include "_maandtabel.html" %}
+{% else %}
+    <p class="muted">Nog geen maanddata voor {{ woning }}.</p>
+{% endif %}
 {% endblock %}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+- Grafieken-pagina: maandtabel toegevoegd onderaan (zelfde als op
+  Maandoverzicht), en een nieuwe "Jaartotalen"-grafiek (elektriciteit
+  afname, gas, zonopbrengst per jaar — berekend uit de maanddata).
+- Jaaroverzicht-pagina: maandtabel ook daar onderaan toegevoegd.
+
 ## 0.1.9
 - "Verschil -1 jaar" (elektriciteit en gas) wordt nu, als er geen losse
   Excel-notitie voor was, automatisch berekend uit de al-ingevoerde

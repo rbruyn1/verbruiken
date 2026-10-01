@@ -25,7 +25,17 @@
     <div class="chart-card {{ 'full' if not heeft_gas }}">
         <canvas id="verschilChart"></canvas>
     </div>
+    <div class="chart-card">
+        <canvas id="jaartotalenChart"></canvas>
+    </div>
 </div>
+{% endif %}
+
+<h2 style="font-size:1.1rem; margin-top:2rem;">Maandoverzicht</h2>
+{% if maandrecords %}
+    {% include "_maandtabel.html" %}
+{% else %}
+    <p class="muted">Nog geen maanddata voor {{ woning }}.</p>
 {% endif %}
 
 <script src="{{ url_for('static', filename='vendor/chart.min.js') }}"></script>
@@ -37,6 +47,11 @@ const gas = {{ gas | tojson }};
 const verschilElek = {{ verschil_elek | tojson }};
 const verschilGas = {{ verschil_gas | tojson }};
 const heeftGas = {{ heeft_gas | tojson }};
+
+const jaarLabels = {{ jaar_labels | tojson }};
+const jaarElektriciteit = {{ jaar_elektriciteit | tojson }};
+const jaarGas = {{ jaar_gas | tojson }};
+const jaarZon = {{ jaar_zon | tojson }};
 
 Chart.defaults.color = "#6b7280";
 Chart.defaults.borderColor = "#e0e2e7";
@@ -78,6 +93,19 @@ new Chart(document.getElementById("verschilChart"), {
         responsive: true,
         plugins: { title: { display: true, text: "verschil -1 jaar (negatief is minder verbruikt)", color: "#1c1f24", font: { size: 16 } } },
         scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
+    }
+});
+
+new Chart(document.getElementById("jaartotalenChart"), {
+    type: "bar",
+    data: { labels: jaarLabels, datasets: [
+        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: "#3576c9" },
+        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: "#f5a623" }] : []),
+        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: "#2e9e52" }
+    ]},
+    options: {
+        responsive: true,
+        plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } }
     }
 });
 </script>

@@ -81,22 +81,24 @@ def _get_records(woning):
     return [dict(r) for r in rows]
 
 
-@app.route("/")
-def index():
-    woning = request.args.get("woning", WONINGEN[0])
+def _enriched_records(woning):
     records = _get_records(woning)
     by_key = {(r["jaar"], r["maand"]): r for r in records}
-
     enriched = []
     for r in reversed(records):  # nieuwste eerst
         vorig = by_key.get((r["jaar"] - 1, r["maand"]))
         enriched.append(verrijk(r, vorig))
+    return enriched
 
+
+@app.route("/")
+def index():
+    woning = request.args.get("woning", WONINGEN[0])
     return render_template(
         "index.html",
         woningen=WONINGEN,
         woning=woning,
-        records=enriched,
+        records=_enriched_records(woning),
         maandnamen=MAANDNAMEN,
     )
 
@@ -217,7 +219,12 @@ def jaaroverzicht():
         resultaten.append(rec)
 
     return render_template(
-        "jaaroverzicht.html", woningen=WONINGEN, woning=woning, records=resultaten
+        "jaaroverzicht.html",
+        woningen=WONINGEN,
+        woning=woning,
+        records=resultaten,
+        maandrecords=_enriched_records(woning),
+        maandnamen=MAANDNAMEN,
     )
 
 
@@ -340,7 +347,29 @@ def grafieken():
         gas=gas,
         verschil_elek=verschil_elek,
         verschil_gas=verschil_gas,
+        maandrecords=_enriched_records(woning),
+        maandnamen=MAANDNAMEN,
+        **_jaartotalen(woning),
     )
+
+
+def _jaartotalen(woning):
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT jaar,
+                  SUM(totaal_verbruik_afname) as elek,
+                  SUM(gas_kwh) as gas,
+                  SUM(zonopbrengst_totaal) as zon
+           FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
+        (woning,),
+    ).fetchall()
+    conn.close()
+    return {
+        "jaar_labels": [str(r["jaar"]) for r in rows],
+        "jaar_elektriciteit": [r["elek"] for r in rows],
+        "jaar_gas": [r["gas"] for r in rows],
+        "jaar_zon": [r["zon"] for r in rows],
+    }
 
 
 if __name__ == "__main__":
