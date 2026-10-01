@@ -54,19 +54,15 @@ MAAND_INVOERVELDEN = [
 ]
 
 JAAR_INVOERVELDEN = [
-    ("jaarverbruik_elektriciteit_kwh", "Jaarverbruik elektriciteit (kWh)"),
-    ("jaarverbruik_elektriciteit_kost_eur", "Jaarverbruik elektriciteit — kost (€)"),
     ("jaarverbruik_gas", "Jaarverbruik gas"),
     ("jaarverbruik_gas_eenheid", "Eenheid gas (m3 / kWh)"),
     ("jaarverbruik_gas_kost_eur", "Jaarverbruik gas — kost (€)"),
     ("opladen_zon_kwh", "Opladen zon — batterij (kWh)"),
     ("opladen_zon_kost_eur", "Opladen zon — kost (€)"),
     ("uitgespaard_zonnepanelen_eur", "Uitgespaard met zonnepanelen (€)"),
-    ("batterij_gebruik_kwh", "Batterij gebruik (kWh)"),
     ("batterij_gebruik_kost_eur", "Batterij gebruik (€)"),
     ("verschil_gas_vorig_jaar_m3", "Verschil gas t.o.v. vorig jaar (m³)"),
     ("verschil_gas_vorig_jaar_kwh", "Verschil gas t.o.v. vorig jaar (kWh-equiv.)"),
-    ("verschil_elektriciteit_vorig_jaar_kwh", "Verschil elektriciteit t.o.v. vorig jaar (kWh)"),
     ("verschil_elektriciteit_vorig_jaar_eur", "Verschil elektriciteit t.o.v. vorig jaar (€)"),
 ]
 
@@ -230,26 +226,44 @@ def jaaroverzicht():
     # dat niet als losse notitie in de Excel stond (bv. Tienen 2021/2022).
     maand_counts = {}
     jaartotaal_afname = {}
+    jaartotaal_afname_eur = {}
     jaartotaal_gas_kwh = {}
     jaartotaal_gas_m3 = {}
+    jaartotaal_batterij_ontladen = {}
     for r in conn.execute(
         """SELECT jaar, COUNT(*) as n,
                   SUM(totaal_verbruik_afname) as afname,
+                  SUM(engie_afname_eur) as afname_eur,
                   SUM(gas_kwh) as gas_kwh,
-                  SUM(gas_m3) as gas_m3
+                  SUM(gas_m3) as gas_m3,
+                  SUM(batterij_ontladen) as batterij_ontladen
            FROM maandverbruik WHERE woning=? GROUP BY jaar""",
         (woning,),
     ):
         maand_counts[r["jaar"]] = r["n"]
         jaartotaal_afname[r["jaar"]] = r["afname"]
+        jaartotaal_afname_eur[r["jaar"]] = r["afname_eur"]
         jaartotaal_gas_kwh[r["jaar"]] = r["gas_kwh"]
         jaartotaal_gas_m3[r["jaar"]] = r["gas_m3"]
+        jaartotaal_batterij_ontladen[r["jaar"]] = r["batterij_ontladen"]
     conn.close()
 
     resultaten = []
     for r in rows:
         rec = dict(r)
         n_maanden = maand_counts.get(rec["jaar"])
+
+        # Elektriciteit kWh/€ en batterijgebruik (kWh) altijd uit de
+        # maandsommen berekenen — klopt tot op afrondingsniveau met de
+        # losse Excel-notities, dus betrouwbaarder en hoeft niet meer
+        # manueel ingevuld te worden.
+        if jaartotaal_afname.get(rec["jaar"]) is not None:
+            rec["jaarverbruik_elektriciteit_kwh"] = jaartotaal_afname[rec["jaar"]]
+        if jaartotaal_afname_eur.get(rec["jaar"]) is not None:
+            rec["jaarverbruik_elektriciteit_kost_eur"] = jaartotaal_afname_eur[rec["jaar"]]
+        if jaartotaal_batterij_ontladen.get(rec["jaar"]) is not None:
+            rec["batterij_gebruik_kwh"] = jaartotaal_batterij_ontladen[rec["jaar"]]
+
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden
         )
@@ -262,12 +276,14 @@ def jaaroverzicht():
 
         # Fallback: als er geen "verschil -1 jaar" is opgegeven, bereken
         # het uit de som van de maanddata van dit jaar vs. vorig jaar.
-        if rec.get("verschil_elektriciteit_vorig_jaar_kwh") is None:
-            huidig = jaartotaal_afname.get(rec["jaar"])
-            vorig = jaartotaal_afname.get(rec["jaar"] - 1)
-            if huidig is not None and vorig is not None:
-                rec["verschil_elektriciteit_vorig_jaar_kwh"] = huidig - vorig
-                rec["_verschil_elek_berekend"] = True
+        # Verschil -1 jaar elektriciteit (kWh) altijd uit dezelfde
+        # jaartotalen berekenen, voor consistentie met het jaarverbruik
+        # hierboven (niet enkel als gat-opvuller).
+        huidig = jaartotaal_afname.get(rec["jaar"])
+        vorig = jaartotaal_afname.get(rec["jaar"] - 1)
+        if huidig is not None and vorig is not None:
+            rec["verschil_elektriciteit_vorig_jaar_kwh"] = huidig - vorig
+
         if rec.get("verschil_gas_vorig_jaar_kwh") is None:
             huidig = jaartotaal_gas_kwh.get(rec["jaar"])
             vorig = jaartotaal_gas_kwh.get(rec["jaar"] - 1)

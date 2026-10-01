@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4
+- Jaaroverzicht: alle elektrische waarden die betrouwbaar uit de
+  maandsommen af te leiden zijn, worden nu altijd automatisch berekend
+  i.p.v. de losse Excel-notitie te tonen — jaarverbruik elektriciteit
+  (kWh + €), batterijgebruik (kWh), en verschil -1 jaar elektriciteit
+  (kWh). Deze velden zijn uit het invoerformulier gehaald (niet meer
+  nodig). "Opladen zon" blijft manueel: dat cijfer komt niet overeen
+  met de `batterij_laden`-kolom in de maanddata (~1,9x verschil), dus
+  is het kennelijk een apart gemeten grootheid.
+
 ## 0.2.3
 - Gas (kWh) vult zich nu automatisch in op basis van gas (m³) in het
   maand-invoerformulier. Gebruikt de laatst gekende werkelijke
