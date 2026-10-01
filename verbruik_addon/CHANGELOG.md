@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.3
+- Gas (kWh) vult zich nu automatisch in op basis van gas (m³) in het
+  maand-invoerformulier. Gebruikt de laatst gekende werkelijke
+  omzetfactor uit je eigen data — géén vaste online constante, want
+  die factor blijkt in de praktijk te schommelen (5 tot 13,6 kWh/m³
+  over de jaren, Fluvius past hem periodiek aan). Overschrijfbaar zoals
+  de andere auto-velden (dubbelklik = terug naar auto).
+
 ## 0.2.2
 - Maandoverzicht en Grafieken samengevoegd tot één startpagina ("/").
   De aparte "Maandoverzicht"-tab is weg; "Grafieken" als los item ook

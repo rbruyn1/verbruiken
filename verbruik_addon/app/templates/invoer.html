@@ -69,5 +69,25 @@ function koppelAutoTotaal(piekId, dalId, totaalId) {
 }
 koppelAutoTotaal("piek_verbruik", "dal_verbruik", "totaal_verbruik_afname");
 koppelAutoTotaal("piek_export", "dal_export", "totaal_export");
+
+// Gas kWh = gas m³ × laatst gekende werkelijke omzetfactor (die factor
+// schommelt in realiteit, dus GEEN vaste constante — zie toelichting bij
+// het veld). Zelfde auto/overschrijfbaar-patroon als hierboven.
+const gasFactor = {{ gas_factor | tojson }};
+if (gasFactor) {
+    const m3 = document.getElementById("gas_m3");
+    const kwh = document.getElementById("gas_kwh");
+    if (m3 && kwh) {
+        let handmatig = kwh.value.trim() !== "";
+        function herberekenGas() {
+            if (handmatig) return;
+            const v = parseFloat(m3.value.replace(",", ".")) || 0;
+            kwh.value = m3.value.trim() === "" ? "" : (v * gasFactor).toFixed(1);
+        }
+        m3.addEventListener("input", herberekenGas);
+        kwh.addEventListener("input", () => { handmatig = true; });
+        kwh.addEventListener("dblclick", () => { handmatig = false; herberekenGas(); });
+    }
+}
 </script>
 {% endblock %}

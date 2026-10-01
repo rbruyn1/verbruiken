@@ -45,7 +45,7 @@ MAAND_INVOERVELDEN = [
     ("batterij_laden", "Batterij laden (kWh)"),
     ("batterij_ontladen", "Batterij ontladen (kWh)"),
     ("gas_m3", "Gas (m³)"),
-    ("gas_kwh", "Gas (kWh)"),
+    ("gas_kwh", "Gas (kWh) — auto = m³ × laatst gekende factor, overschrijfbaar"),
     ("prijs_gas_eur", "Gasbedrag (€)"),
     ("water_l", "Water (l)"),
     ("engie_afname_eur", "Engie afname (€)"),
@@ -150,6 +150,24 @@ def _jaartotalen(woning):
     }
 
 
+def _laatste_gas_factor(woning):
+    """Meest recente werkelijke kWh/m³-omzetfactor uit de eigen data
+    (deze schommelt in realiteit — Fluvius publiceert ze periodiek op
+    basis van de calorische waarde — dus géén vaste online constante)."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT gas_kwh, gas_m3 FROM maandverbruik
+           WHERE woning=? AND gas_m3 IS NOT NULL AND gas_m3 != 0
+                 AND gas_kwh IS NOT NULL
+           ORDER BY jaar DESC, maand DESC LIMIT 1""",
+        (woning,),
+    ).fetchone()
+    conn.close()
+    if row:
+        return row["gas_kwh"] / row["gas_m3"]
+    return None
+
+
 @app.route("/invoer", methods=["GET", "POST"])
 @app.route("/invoer/<woning>/<int:jaar>/<int:maand>", methods=["GET", "POST"])
 def invoer(woning=None, jaar=None, maand=None):
@@ -162,7 +180,6 @@ def invoer(woning=None, jaar=None, maand=None):
         ).fetchone()
         conn.close()
         bestaand = dict(row) if row else None
-
     if request.method == "POST":
         woning = request.form["woning"]
         jaar = int(request.form["jaar"])
@@ -196,6 +213,7 @@ def invoer(woning=None, jaar=None, maand=None):
         woning=woning,
         jaar=jaar,
         maand=maand,
+        gas_factor=_laatste_gas_factor(woning or WONINGEN[0]),
     )
 
 
