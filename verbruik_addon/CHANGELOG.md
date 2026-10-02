@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.7
+- Jaaroverzicht: alle auto-berekende velden (elektriciteit kWh/€, zon
+  export, batterij laden/ontladen, verschil -1 jaar elektriciteit) zijn
+  terug manueel overschrijfbaar via "+ Jaar invoeren" / "bewerk" — nodig
+  omdat Engie (energieapp) soms een paar dagen achterloopt op de
+  realiteit. Fallback-gedrag: een manueel ingevulde waarde heeft altijd
+  voorrang op de berekende som; auto-waarden krijgen een `*` ter
+  onderscheid.
+- Nieuwe kolom `batterij_laden_kwh` in de databank (met automatische
+  schema-migratie voor bestaande installaties).
+
 ## 0.2.6
 - "Opladen zon" bleek zon-export te zijn (export naar het net), geen
   batterijlading — geverifieerd tegen `totaal_export`/`engie_injectie_eur`

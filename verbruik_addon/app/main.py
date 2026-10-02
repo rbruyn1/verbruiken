@@ -54,13 +54,20 @@ MAAND_INVOERVELDEN = [
 ]
 
 JAAR_INVOERVELDEN = [
+    ("jaarverbruik_elektriciteit_kwh", "Jaarverbruik elektriciteit (kWh) — auto uit maandsommen, overschrijfbaar (bv. als Engie achterloopt)"),
+    ("jaarverbruik_elektriciteit_kost_eur", "Jaarverbruik elektriciteit — kost (€) — auto, overschrijfbaar"),
     ("jaarverbruik_gas", "Jaarverbruik gas"),
     ("jaarverbruik_gas_eenheid", "Eenheid gas (m3 / kWh)"),
     ("jaarverbruik_gas_kost_eur", "Jaarverbruik gas — kost (€)"),
+    ("opladen_zon_kwh", "Zon export (kWh) — auto, overschrijfbaar"),
+    ("opladen_zon_kost_eur", "Zon export — kost (€) — auto, overschrijfbaar"),
     ("uitgespaard_zonnepanelen_eur", "Uitgespaard met zonnepanelen (€)"),
+    ("batterij_laden_kwh", "Batterij laden (kWh) — auto, overschrijfbaar"),
+    ("batterij_gebruik_kwh", "Batterij ontladen (kWh) — auto, overschrijfbaar"),
     ("batterij_gebruik_kost_eur", "Batterij gebruik (€)"),
     ("verschil_gas_vorig_jaar_m3", "Verschil gas t.o.v. vorig jaar (m³)"),
     ("verschil_gas_vorig_jaar_kwh", "Verschil gas t.o.v. vorig jaar (kWh-equiv.)"),
+    ("verschil_elektriciteit_vorig_jaar_kwh", "Verschil elektriciteit t.o.v. vorig jaar (kWh) — auto, overschrijfbaar"),
     ("verschil_elektriciteit_vorig_jaar_eur", "Verschil elektriciteit t.o.v. vorig jaar (€)"),
 ]
 
@@ -255,29 +262,55 @@ def jaaroverzicht():
         jaartotaal_injectie_eur[r["jaar"]] = r["injectie_eur"]
     conn.close()
 
+    def _fallback(rec, veld, berekend):
+        """Vult veld alleen aan als het nog leeg is — een manueel
+        ingevulde waarde (bv. omdat Engie een paar dagen achterloopt)
+        krijgt altijd voorrang op de berekende som."""
+        if rec.get(veld) is None and berekend is not None:
+            rec[veld] = berekend
+            rec[f"_{veld}_berekend"] = True
+
     resultaten = []
     for r in rows:
         rec = dict(r)
-        n_maanden = maand_counts.get(rec["jaar"])
+        jaar = rec["jaar"]
+        n_maanden = maand_counts.get(jaar)
 
-        # Elektriciteit kWh/€ en batterijgebruik (kWh) altijd uit de
-        # maandsommen berekenen — klopt tot op afrondingsniveau met de
-        # losse Excel-notities, dus betrouwbaarder en hoeft niet meer
-        # manueel ingevuld te worden.
-        if jaartotaal_afname.get(rec["jaar"]) is not None:
-            rec["jaarverbruik_elektriciteit_kwh"] = jaartotaal_afname[rec["jaar"]]
-        if jaartotaal_afname_eur.get(rec["jaar"]) is not None:
-            rec["jaarverbruik_elektriciteit_kost_eur"] = jaartotaal_afname_eur[rec["jaar"]]
-        rec["batterij_gebruik_kwh"] = jaartotaal_batterij_ontladen.get(rec["jaar"]) or rec.get("batterij_gebruik_kwh")
-        rec["batterij_laden_kwh"] = jaartotaal_batterij_laden.get(rec["jaar"])
-
+        _fallback(rec, "jaarverbruik_elektriciteit_kwh", jaartotaal_afname.get(jaar))
+        _fallback(rec, "jaarverbruik_elektriciteit_kost_eur", jaartotaal_afname_eur.get(jaar))
+        _fallback(rec, "batterij_gebruik_kwh", jaartotaal_batterij_ontladen.get(jaar))
+        _fallback(rec, "batterij_laden_kwh", jaartotaal_batterij_laden.get(jaar))
         # "Opladen zon" blijkt zon-export te zijn (export naar het net),
         # geen batterijlading — geverifieerd tegen totaal_export/
-        # engie_injectie_eur (klopt tot op afrondingsniveau).
-        if jaartotaal_export.get(rec["jaar"]) is not None:
-            rec["opladen_zon_kwh"] = jaartotaal_export[rec["jaar"]]
-        if jaartotaal_injectie_eur.get(rec["jaar"]) is not None:
-            rec["opladen_zon_kost_eur"] = abs(jaartotaal_injectie_eur[rec["jaar"]])
+        # engie_injectie_eur.
+        _fallback(rec, "opladen_zon_kwh", jaartotaal_export.get(jaar))
+        injectie = jaartotaal_injectie_eur.get(jaar)
+        _fallback(rec, "opladen_zon_kost_eur", abs(injectie) if injectie is not None else None)
+
+        huidig_afname = jaartotaal_afname.get(jaar)
+        vorig_afname = jaartotaal_afname.get(jaar - 1)
+        berekend_verschil_elek = (
+            huidig_afname - vorig_afname
+            if huidig_afname is not None and vorig_afname is not None
+            else None
+        )
+        _fallback(rec, "verschil_elektriciteit_vorig_jaar_kwh", berekend_verschil_elek)
+
+        huidig_gas = jaartotaal_gas_kwh.get(jaar)
+        vorig_gas = jaartotaal_gas_kwh.get(jaar - 1)
+        berekend_verschil_gas = (
+            huidig_gas - vorig_gas if huidig_gas is not None and vorig_gas is not None else None
+        )
+        _fallback(rec, "verschil_gas_vorig_jaar_kwh", berekend_verschil_gas)
+
+        huidig_gas_m3 = jaartotaal_gas_m3.get(jaar)
+        vorig_gas_m3 = jaartotaal_gas_m3.get(jaar - 1)
+        berekend_verschil_gas_m3 = (
+            huidig_gas_m3 - vorig_gas_m3
+            if huidig_gas_m3 is not None and vorig_gas_m3 is not None
+            else None
+        )
+        _fallback(rec, "verschil_gas_vorig_jaar_m3", berekend_verschil_gas_m3)
 
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden
@@ -288,29 +321,6 @@ def jaaroverzicht():
         rec["gem_maand_zon"] = jaaroverzicht_gem_per_maand(
             rec.get("opladen_zon_kost_eur"), n_maanden
         )
-
-        # Fallback: als er geen "verschil -1 jaar" is opgegeven, bereken
-        # het uit de som van de maanddata van dit jaar vs. vorig jaar.
-        # Verschil -1 jaar elektriciteit (kWh) altijd uit dezelfde
-        # jaartotalen berekenen, voor consistentie met het jaarverbruik
-        # hierboven (niet enkel als gat-opvuller).
-        huidig = jaartotaal_afname.get(rec["jaar"])
-        vorig = jaartotaal_afname.get(rec["jaar"] - 1)
-        if huidig is not None and vorig is not None:
-            rec["verschil_elektriciteit_vorig_jaar_kwh"] = huidig - vorig
-
-        if rec.get("verschil_gas_vorig_jaar_kwh") is None:
-            huidig = jaartotaal_gas_kwh.get(rec["jaar"])
-            vorig = jaartotaal_gas_kwh.get(rec["jaar"] - 1)
-            if huidig is not None and vorig is not None:
-                rec["verschil_gas_vorig_jaar_kwh"] = huidig - vorig
-                rec["_verschil_gas_berekend"] = True
-        if rec.get("verschil_gas_vorig_jaar_m3") is None:
-            huidig = jaartotaal_gas_m3.get(rec["jaar"])
-            vorig = jaartotaal_gas_m3.get(rec["jaar"] - 1)
-            if huidig is not None and vorig is not None:
-                rec["verschil_gas_vorig_jaar_m3"] = huidig - vorig
-                rec["_verschil_gas_m3_berekend"] = True
 
         resultaten.append(rec)
 

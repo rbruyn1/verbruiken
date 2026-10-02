@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS jaaroverzicht (
     uitgespaard_zonnepanelen_eur REAL,
 
     batterij_gebruik_kwh REAL,
+    batterij_laden_kwh REAL,
     batterij_gebruik_kost_eur REAL,
 
     verschil_gas_vorig_jaar_m3 REAL,
@@ -75,9 +76,19 @@ def get_connection():
     return conn
 
 
+def _ensure_columns(conn):
+    """Lichte schema-migratie: voegt kolommen toe die in SCHEMA staan maar
+    nog niet in een bestaande (al-gemigreerde) databank zitten. SQLite's
+    CREATE TABLE IF NOT EXISTS raakt een reeds bestaande tabel niet aan."""
+    bestaand = {row[1] for row in conn.execute("PRAGMA table_info(jaaroverzicht)")}
+    if "batterij_laden_kwh" not in bestaand:
+        conn.execute("ALTER TABLE jaaroverzicht ADD COLUMN batterij_laden_kwh REAL")
+
+
 def init_db():
     conn = get_connection()
     conn.executescript(SCHEMA)
+    _ensure_columns(conn)
     conn.commit()
     conn.close()
 
