@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.11
+- "Uitgespaard met zonnepanelen" wordt nu automatisch berekend (fallback,
+  overschrijfbaar) als `(jaarprijs afname × zelfverbruik) + (jaarprijs
+  injectie × export)` — zelfde opbouw als de Excel-formule, maar met de
+  prijzen van het juiste jaar. De Excel-waarde voor 2026 bleek zelf een
+  sleepfout te bevatten (gebruikte voor 11 van de 12 maanden de prijzen
+  van 2025 i.p.v. 2026); die blijft gewoon staan als manueel ingevulde
+  waarde (voorrang op auto), maar nieuwe/lege jaren krijgen de correcte
+  berekening.
+- Bugfix: crash wanneer injectie-€ ontbrak terwijl export wel > 0 was.
+
 ## 0.2.10
 - Jaaroverzicht: aparte "Gas (m³)"-kolom toegevoegd naast de bestaande
   kWh-waarde — automatisch berekend uit de som van de maandelijkse

@@ -61,7 +61,7 @@ JAAR_INVOERVELDEN = [
     ("jaarverbruik_gas_kost_eur", "Jaarverbruik gas — kost (€)"),
     ("opladen_zon_kwh", "Zon export (kWh) — auto, overschrijfbaar"),
     ("opladen_zon_kost_eur", "Zon export — kost (€) — auto, overschrijfbaar"),
-    ("uitgespaard_zonnepanelen_eur", "Uitgespaard met zonnepanelen (€)"),
+    ("uitgespaard_zonnepanelen_eur", "Uitgespaard met zonnepanelen (€) — auto, overschrijfbaar"),
     ("batterij_laden_kwh", "Batterij laden (kWh) — auto, overschrijfbaar"),
     ("batterij_gebruik_kwh", "Batterij ontladen (kWh) — auto, overschrijfbaar"),
     ("batterij_gebruik_kost_eur", "Batterij gebruik (€)"),
@@ -232,7 +232,8 @@ def _jaartotalen_componenten(woning):
                   SUM(batterij_ontladen) as batterij_ontladen,
                   SUM(batterij_laden) as batterij_laden,
                   SUM(totaal_export) as export,
-                  SUM(engie_injectie_eur) as injectie_eur
+                  SUM(engie_injectie_eur) as injectie_eur,
+                  SUM(zonopbrengst_totaal) as zon
            FROM maandverbruik WHERE woning=? GROUP BY jaar""",
         (woning,),
     ):
@@ -254,6 +255,27 @@ def _bereken_jaaroverzicht(jaar, componenten):
         return h - v if h is not None and v is not None else None
 
     injectie = huidig.get("injectie_eur")
+    opladen_zon_kost_eur = abs(injectie) if injectie is not None else None
+    opladen_zon_kwh = huidig.get("export")
+
+    # Uitgespaard met zonnepanelen = (jaarprijs afname × jaarlijks
+    # zelfverbruik) + (jaarprijs injectie × jaarlijkse export). Zelfde
+    # opbouw als de Excel-formule, maar met de prijzen van het JUISTE
+    # jaar — in de Excel bleek dit voor 2026 door een sleepfout de
+    # prijzen van 2025 te gebruiken voor 11 van de 12 maanden.
+    uitgespaard = None
+    afname_kwh, afname_eur = huidig.get("afname"), huidig.get("afname_eur")
+    zon, export = huidig.get("zon"), huidig.get("export")
+    if None not in (afname_kwh, afname_eur, zon, export) and afname_kwh and export:
+        prijs_afname = afname_eur / afname_kwh
+        prijs_injectie = (
+            opladen_zon_kost_eur / opladen_zon_kwh
+            if opladen_zon_kwh and opladen_zon_kost_eur is not None
+            else 0
+        )
+        zelfverbruik = zon - export
+        uitgespaard = prijs_afname * zelfverbruik + prijs_injectie * export
+
     return {
         "jaarverbruik_elektriciteit_kwh": huidig.get("afname"),
         "jaarverbruik_elektriciteit_kost_eur": huidig.get("afname_eur"),
@@ -262,8 +284,9 @@ def _bereken_jaaroverzicht(jaar, componenten):
         # "Opladen zon" blijkt zon-export te zijn (export naar het net),
         # geen batterijlading — geverifieerd tegen totaal_export/
         # engie_injectie_eur.
-        "opladen_zon_kwh": huidig.get("export"),
-        "opladen_zon_kost_eur": abs(injectie) if injectie is not None else None,
+        "opladen_zon_kwh": opladen_zon_kwh,
+        "opladen_zon_kost_eur": opladen_zon_kost_eur,
+        "uitgespaard_zonnepanelen_eur": uitgespaard,
         "verschil_elektriciteit_vorig_jaar_kwh": verschil("afname"),
         "verschil_gas_vorig_jaar_kwh": verschil("gas_kwh"),
         "verschil_gas_vorig_jaar_m3": verschil("gas_m3"),
