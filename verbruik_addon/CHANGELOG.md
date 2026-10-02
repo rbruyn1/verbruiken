@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.6
+- "Opladen zon" bleek zon-export te zijn (export naar het net), geen
+  batterijlading — geverifieerd tegen `totaal_export`/`engie_injectie_eur`
+  (klopt tot op afrondingsniveau). Hernoemd naar "Zon export (kWh)" en
+  nu ook automatisch berekend uit de maandsommen; uit het
+  invoerformulier gehaald.
+
 ## 0.2.5
 - Jaaroverzicht: "Batterij laden" toegevoegd naast "ontladen" (beide nu
   automatisch berekend uit de maandsommen), kolom hernoemd naar

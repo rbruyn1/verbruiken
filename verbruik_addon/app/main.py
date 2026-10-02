@@ -57,8 +57,6 @@ JAAR_INVOERVELDEN = [
     ("jaarverbruik_gas", "Jaarverbruik gas"),
     ("jaarverbruik_gas_eenheid", "Eenheid gas (m3 / kWh)"),
     ("jaarverbruik_gas_kost_eur", "Jaarverbruik gas — kost (€)"),
-    ("opladen_zon_kwh", "Opladen zon — batterij (kWh)"),
-    ("opladen_zon_kost_eur", "Opladen zon — kost (€)"),
     ("uitgespaard_zonnepanelen_eur", "Uitgespaard met zonnepanelen (€)"),
     ("batterij_gebruik_kost_eur", "Batterij gebruik (€)"),
     ("verschil_gas_vorig_jaar_m3", "Verschil gas t.o.v. vorig jaar (m³)"),
@@ -231,6 +229,8 @@ def jaaroverzicht():
     jaartotaal_gas_m3 = {}
     jaartotaal_batterij_ontladen = {}
     jaartotaal_batterij_laden = {}
+    jaartotaal_export = {}
+    jaartotaal_injectie_eur = {}
     for r in conn.execute(
         """SELECT jaar, COUNT(*) as n,
                   SUM(totaal_verbruik_afname) as afname,
@@ -238,7 +238,9 @@ def jaaroverzicht():
                   SUM(gas_kwh) as gas_kwh,
                   SUM(gas_m3) as gas_m3,
                   SUM(batterij_ontladen) as batterij_ontladen,
-                  SUM(batterij_laden) as batterij_laden
+                  SUM(batterij_laden) as batterij_laden,
+                  SUM(totaal_export) as export,
+                  SUM(engie_injectie_eur) as injectie_eur
            FROM maandverbruik WHERE woning=? GROUP BY jaar""",
         (woning,),
     ):
@@ -249,6 +251,8 @@ def jaaroverzicht():
         jaartotaal_gas_m3[r["jaar"]] = r["gas_m3"]
         jaartotaal_batterij_ontladen[r["jaar"]] = r["batterij_ontladen"]
         jaartotaal_batterij_laden[r["jaar"]] = r["batterij_laden"]
+        jaartotaal_export[r["jaar"]] = r["export"]
+        jaartotaal_injectie_eur[r["jaar"]] = r["injectie_eur"]
     conn.close()
 
     resultaten = []
@@ -266,6 +270,14 @@ def jaaroverzicht():
             rec["jaarverbruik_elektriciteit_kost_eur"] = jaartotaal_afname_eur[rec["jaar"]]
         rec["batterij_gebruik_kwh"] = jaartotaal_batterij_ontladen.get(rec["jaar"]) or rec.get("batterij_gebruik_kwh")
         rec["batterij_laden_kwh"] = jaartotaal_batterij_laden.get(rec["jaar"])
+
+        # "Opladen zon" blijkt zon-export te zijn (export naar het net),
+        # geen batterijlading — geverifieerd tegen totaal_export/
+        # engie_injectie_eur (klopt tot op afrondingsniveau).
+        if jaartotaal_export.get(rec["jaar"]) is not None:
+            rec["opladen_zon_kwh"] = jaartotaal_export[rec["jaar"]]
+        if jaartotaal_injectie_eur.get(rec["jaar"]) is not None:
+            rec["opladen_zon_kost_eur"] = abs(jaartotaal_injectie_eur[rec["jaar"]])
 
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden
