@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.8
+- Jaaroverzicht-invoerformulier: dubbelklik op een auto-berekend veld
+  maakt het leeg (terug naar automatische berekening bij opslaan), met
+  de huidige berekende waarde als placeholder ter referentie — zelfde
+  patroon als bij het maand-invoerformulier.
+- Interne refactor: de jaaroverzicht-berekeningslogica zit nu in
+  herbruikbare functies (`_jaartotalen_componenten`,
+  `_bereken_jaaroverzicht`), gedeeld tussen de overzichtspagina en het
+  invoerformulier.
+
 ## 0.2.7
 - Jaaroverzicht: alle auto-berekende velden (elektriciteit kWh/€, zon
   export, batterij laden/ontladen, verschil -1 jaar elektriciteit) zijn

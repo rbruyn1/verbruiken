@@ -218,26 +218,11 @@ def invoer(woning=None, jaar=None, maand=None):
     )
 
 
-@app.route("/jaaroverzicht")
-def jaaroverzicht():
-    woning = request.args.get("woning", WONINGEN[0])
+def _jaartotalen_componenten(woning):
+    """Som per jaar van de maandvelden die als basis dienen voor de
+    auto-berekende jaaroverzicht-velden."""
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT * FROM jaaroverzicht WHERE woning=? ORDER BY jaar DESC", (woning,)
-    ).fetchall()
-
-    # aantal maanden met data + jaartotalen (afname, gas) per jaar, voor
-    # gem./maand-berekening en als fallback voor "verschil -1 jaar" wanneer
-    # dat niet als losse notitie in de Excel stond (bv. Tienen 2021/2022).
-    maand_counts = {}
-    jaartotaal_afname = {}
-    jaartotaal_afname_eur = {}
-    jaartotaal_gas_kwh = {}
-    jaartotaal_gas_m3 = {}
-    jaartotaal_batterij_ontladen = {}
-    jaartotaal_batterij_laden = {}
-    jaartotaal_export = {}
-    jaartotaal_injectie_eur = {}
+    maand_counts, componenten = {}, {}
     for r in conn.execute(
         """SELECT jaar, COUNT(*) as n,
                   SUM(totaal_verbruik_afname) as afname,
@@ -252,66 +237,65 @@ def jaaroverzicht():
         (woning,),
     ):
         maand_counts[r["jaar"]] = r["n"]
-        jaartotaal_afname[r["jaar"]] = r["afname"]
-        jaartotaal_afname_eur[r["jaar"]] = r["afname_eur"]
-        jaartotaal_gas_kwh[r["jaar"]] = r["gas_kwh"]
-        jaartotaal_gas_m3[r["jaar"]] = r["gas_m3"]
-        jaartotaal_batterij_ontladen[r["jaar"]] = r["batterij_ontladen"]
-        jaartotaal_batterij_laden[r["jaar"]] = r["batterij_laden"]
-        jaartotaal_export[r["jaar"]] = r["export"]
-        jaartotaal_injectie_eur[r["jaar"]] = r["injectie_eur"]
+        componenten[r["jaar"]] = dict(r)
+    conn.close()
+    return maand_counts, componenten
+
+
+def _bereken_jaaroverzicht(jaar, componenten):
+    """Berekent alle auto-afleidbare jaaroverzicht-velden voor één jaar
+    (dit jaar t.o.v. vorig jaar waar relevant). Retourneert een dict met
+    enkel de velden waarvoor een berekening mogelijk is (anders None)."""
+    huidig = componenten.get(jaar, {})
+    vorig = componenten.get(jaar - 1, {})
+
+    def verschil(veld):
+        h, v = huidig.get(veld), vorig.get(veld)
+        return h - v if h is not None and v is not None else None
+
+    injectie = huidig.get("injectie_eur")
+    return {
+        "jaarverbruik_elektriciteit_kwh": huidig.get("afname"),
+        "jaarverbruik_elektriciteit_kost_eur": huidig.get("afname_eur"),
+        "batterij_gebruik_kwh": huidig.get("batterij_ontladen"),
+        "batterij_laden_kwh": huidig.get("batterij_laden"),
+        # "Opladen zon" blijkt zon-export te zijn (export naar het net),
+        # geen batterijlading — geverifieerd tegen totaal_export/
+        # engie_injectie_eur.
+        "opladen_zon_kwh": huidig.get("export"),
+        "opladen_zon_kost_eur": abs(injectie) if injectie is not None else None,
+        "verschil_elektriciteit_vorig_jaar_kwh": verschil("afname"),
+        "verschil_gas_vorig_jaar_kwh": verschil("gas_kwh"),
+        "verschil_gas_vorig_jaar_m3": verschil("gas_m3"),
+    }
+
+
+@app.route("/jaaroverzicht")
+def jaaroverzicht():
+    woning = request.args.get("woning", WONINGEN[0])
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM jaaroverzicht WHERE woning=? ORDER BY jaar DESC", (woning,)
+    ).fetchall()
     conn.close()
 
-    def _fallback(rec, veld, berekend):
-        """Vult veld alleen aan als het nog leeg is — een manueel
-        ingevulde waarde (bv. omdat Engie een paar dagen achterloopt)
-        krijgt altijd voorrang op de berekende som."""
-        if rec.get(veld) is None and berekend is not None:
-            rec[veld] = berekend
-            rec[f"_{veld}_berekend"] = True
+    maand_counts, componenten = _jaartotalen_componenten(woning)
 
     resultaten = []
     for r in rows:
         rec = dict(r)
         jaar = rec["jaar"]
+        berekend = _bereken_jaaroverzicht(jaar, componenten)
+
+        for veld, waarde in berekend.items():
+            # Een manueel ingevulde waarde (bv. omdat Engie een paar
+            # dagen achterloopt) krijgt altijd voorrang op de berekende
+            # som.
+            if rec.get(veld) is None and waarde is not None:
+                rec[veld] = waarde
+                rec[f"_{veld}_berekend"] = True
+
         n_maanden = maand_counts.get(jaar)
-
-        _fallback(rec, "jaarverbruik_elektriciteit_kwh", jaartotaal_afname.get(jaar))
-        _fallback(rec, "jaarverbruik_elektriciteit_kost_eur", jaartotaal_afname_eur.get(jaar))
-        _fallback(rec, "batterij_gebruik_kwh", jaartotaal_batterij_ontladen.get(jaar))
-        _fallback(rec, "batterij_laden_kwh", jaartotaal_batterij_laden.get(jaar))
-        # "Opladen zon" blijkt zon-export te zijn (export naar het net),
-        # geen batterijlading — geverifieerd tegen totaal_export/
-        # engie_injectie_eur.
-        _fallback(rec, "opladen_zon_kwh", jaartotaal_export.get(jaar))
-        injectie = jaartotaal_injectie_eur.get(jaar)
-        _fallback(rec, "opladen_zon_kost_eur", abs(injectie) if injectie is not None else None)
-
-        huidig_afname = jaartotaal_afname.get(jaar)
-        vorig_afname = jaartotaal_afname.get(jaar - 1)
-        berekend_verschil_elek = (
-            huidig_afname - vorig_afname
-            if huidig_afname is not None and vorig_afname is not None
-            else None
-        )
-        _fallback(rec, "verschil_elektriciteit_vorig_jaar_kwh", berekend_verschil_elek)
-
-        huidig_gas = jaartotaal_gas_kwh.get(jaar)
-        vorig_gas = jaartotaal_gas_kwh.get(jaar - 1)
-        berekend_verschil_gas = (
-            huidig_gas - vorig_gas if huidig_gas is not None and vorig_gas is not None else None
-        )
-        _fallback(rec, "verschil_gas_vorig_jaar_kwh", berekend_verschil_gas)
-
-        huidig_gas_m3 = jaartotaal_gas_m3.get(jaar)
-        vorig_gas_m3 = jaartotaal_gas_m3.get(jaar - 1)
-        berekend_verschil_gas_m3 = (
-            huidig_gas_m3 - vorig_gas_m3
-            if huidig_gas_m3 is not None and vorig_gas_m3 is not None
-            else None
-        )
-        _fallback(rec, "verschil_gas_vorig_jaar_m3", berekend_verschil_gas_m3)
-
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden
         )
@@ -374,6 +358,11 @@ def jaaroverzicht_invoer(woning=None, jaar=None):
         flash(f"Jaaroverzicht {jaar} voor {woning} opgeslagen.")
         return redirect(url_for("jaaroverzicht", woning=woning))
 
+    berekend = {}
+    if woning and jaar:
+        _, componenten = _jaartotalen_componenten(woning)
+        berekend = _bereken_jaaroverzicht(jaar, componenten)
+
     return render_template(
         "jaaroverzicht_invoer.html",
         woningen=WONINGEN,
@@ -381,6 +370,7 @@ def jaaroverzicht_invoer(woning=None, jaar=None):
         bestaand=bestaand,
         woning=woning,
         jaar=jaar,
+        berekend=berekend,
     )
 
 

@@ -28,10 +28,30 @@
         <option value="kWh" {{ "selected" if bestaand and bestaand[veld] == "kWh" }}>kWh</option>
     </select>
     {% else %}
-    <input type="text" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel"
+           {% if veld in berekend and berekend[veld] is not none %}data-berekend="{{ berekend[veld] }}"{% endif %}>
     {% endif %}
     {% endfor %}
 
     <button type="submit">Opslaan</button>
+    <p class="muted" style="margin-top:0.75rem; font-size:0.8rem;">
+        Tip: velden gemarkeerd "auto" zijn hierboven al zichtbaar als ze automatisch berekend worden.
+        Dubbelklik op zo'n veld om het leeg te maken (terug naar auto) — de huidige berekende waarde
+        verschijnt dan als placeholder ter referentie.
+    </p>
 </form>
+
+<script>
+// Dubbelklik op een auto-berekend veld: maak het leeg (DB-waarde wordt
+// NULL bij opslaan, dus geldt bij weergave weer de berekende som i.p.v.
+// een manueel ingevulde waarde). De berekende waarde blijft zichtbaar
+// als placeholder, puur ter referentie.
+document.querySelectorAll("input[data-berekend]").forEach(function (el) {
+    const berekend = el.dataset.berekend;
+    el.placeholder = "auto: " + berekend;
+    el.addEventListener("dblclick", function () {
+        el.value = "";
+    });
+});
+</script>
 {% endblock %}
