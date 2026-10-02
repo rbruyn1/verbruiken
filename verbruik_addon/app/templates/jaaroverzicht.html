@@ -38,7 +38,7 @@
         <tr>
             <td>{{ r.jaar }}</td>
             <td>
-                {{ "%.0f"|format(r.jaarverbruik_elektriciteit_kwh) if r.jaarverbruik_elektriciteit_kwh is not none else "–" }}
+                {{ "%.2f"|format(r.jaarverbruik_elektriciteit_kwh) if r.jaarverbruik_elektriciteit_kwh is not none else "–" }}
                 {% if r._jaarverbruik_elektriciteit_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>
@@ -46,27 +46,27 @@
                 {% if r._jaarverbruik_elektriciteit_kost_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>{{ "%.2f"|format(r.gem_maand_elektriciteit) if r.gem_maand_elektriciteit is not none else "–" }}</td>
-            <td>{{ r.jaarverbruik_gas ~ " " ~ (r.jaarverbruik_gas_eenheid or "") if r.jaarverbruik_gas is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.jaarverbruik_gas) ~ " " ~ (r.jaarverbruik_gas_eenheid or "") if r.jaarverbruik_gas is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.jaarverbruik_gas_kost_eur) if r.jaarverbruik_gas_kost_eur is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.gem_maand_gas) if r.gem_maand_gas is not none else "–" }}</td>
             <td>
-                {{ "%.0f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}
+                {{ "%.2f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}
                 {% if r._opladen_zon_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>{{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}</td>
             <td>
-                {{ "%.0f"|format(r.batterij_laden_kwh) if r.batterij_laden_kwh is not none else "–" }}
+                {{ "%.2f"|format(r.batterij_laden_kwh) if r.batterij_laden_kwh is not none else "–" }}
                 {% if r._batterij_laden_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %} /
-                {{ "%.0f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }}
+                {{ "%.2f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }}
                 {% if r._batterij_gebruik_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>{{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}</td>
             <td>
-                {{ "%.1f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}
+                {{ "%.2f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}
                 {% if r._verschil_gas_vorig_jaar_m3_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>
-                {{ "%.0f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}
+                {{ "%.2f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}
                 {% if r._verschil_elektriciteit_vorig_jaar_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td><a class="edit" href="{{ url_for('jaaroverzicht_invoer', woning=r.woning, jaar=r.jaar) }}">bewerk</a></td>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.9
+- Verbruikscijfers (kWh/m³) in de maand- en jaaroverzichtstabellen tonen
+  nu consequent 2 cijfers na de komma, i.p.v. de eerdere mix van 0/1
+  decimalen.
+
 ## 0.2.8
 - Jaaroverzicht-invoerformulier: dubbelklik op een auto-berekend veld
   maakt het leeg (terug naar automatische berekening bij opslaan), met
