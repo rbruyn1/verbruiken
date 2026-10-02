@@ -230,13 +230,15 @@ def jaaroverzicht():
     jaartotaal_gas_kwh = {}
     jaartotaal_gas_m3 = {}
     jaartotaal_batterij_ontladen = {}
+    jaartotaal_batterij_laden = {}
     for r in conn.execute(
         """SELECT jaar, COUNT(*) as n,
                   SUM(totaal_verbruik_afname) as afname,
                   SUM(engie_afname_eur) as afname_eur,
                   SUM(gas_kwh) as gas_kwh,
                   SUM(gas_m3) as gas_m3,
-                  SUM(batterij_ontladen) as batterij_ontladen
+                  SUM(batterij_ontladen) as batterij_ontladen,
+                  SUM(batterij_laden) as batterij_laden
            FROM maandverbruik WHERE woning=? GROUP BY jaar""",
         (woning,),
     ):
@@ -246,6 +248,7 @@ def jaaroverzicht():
         jaartotaal_gas_kwh[r["jaar"]] = r["gas_kwh"]
         jaartotaal_gas_m3[r["jaar"]] = r["gas_m3"]
         jaartotaal_batterij_ontladen[r["jaar"]] = r["batterij_ontladen"]
+        jaartotaal_batterij_laden[r["jaar"]] = r["batterij_laden"]
     conn.close()
 
     resultaten = []
@@ -261,8 +264,8 @@ def jaaroverzicht():
             rec["jaarverbruik_elektriciteit_kwh"] = jaartotaal_afname[rec["jaar"]]
         if jaartotaal_afname_eur.get(rec["jaar"]) is not None:
             rec["jaarverbruik_elektriciteit_kost_eur"] = jaartotaal_afname_eur[rec["jaar"]]
-        if jaartotaal_batterij_ontladen.get(rec["jaar"]) is not None:
-            rec["batterij_gebruik_kwh"] = jaartotaal_batterij_ontladen[rec["jaar"]]
+        rec["batterij_gebruik_kwh"] = jaartotaal_batterij_ontladen.get(rec["jaar"]) or rec.get("batterij_gebruik_kwh")
+        rec["batterij_laden_kwh"] = jaartotaal_batterij_laden.get(rec["jaar"])
 
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden

@@ -26,7 +26,8 @@
             <th>Gas €/maand</th>
             <th>Opladen zon kWh</th>
             <th>Uitgespaard €</th>
-            <th>Batterij kWh / €</th>
+            <th>Batterij laden/ontladen (kWh)</th>
+            <th>Batterij €</th>
             <th>Δ gas vs -1j</th>
             <th>Δ elek vs -1j</th>
             <th></th>
@@ -45,9 +46,10 @@
             <td>{{ "%.0f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}</td>
             <td>
-                {{ "%.0f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }} /
-                {{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}
+                {{ "%.0f"|format(r.batterij_laden_kwh) if r.batterij_laden_kwh is not none else "–" }} /
+                {{ "%.0f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }}
             </td>
+            <td>{{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}</td>
             <td>
                 {{ "%.1f m³"|format(r.verschil_gas_vorig_jaar_m3) if r.verschil_gas_vorig_jaar_m3 is not none else "–" }}
                 {% if r._verschil_gas_m3_berekend %}<span class="muted" title="Berekend uit maanddata, niet uit de Excel-notitie">*</span>{% endif %}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.5
+- Jaaroverzicht: "Batterij laden" toegevoegd naast "ontladen" (beide nu
+  automatisch berekend uit de maandsommen), kolom hernoemd naar
+  "Batterij laden/ontladen (kWh)" met het €-bedrag ernaast apart.
+- Bugfix: jaaroverzicht crashte op jaren zonder batterijdata (ontbrekende
+  dict-sleutel werd door Jinja niet als "leeg" herkend).
+
 ## 0.2.4
 - Jaaroverzicht: alle elektrische waarden die betrouwbaar uit de
   maandsommen af te leiden zijn, worden nu altijd automatisch berekend
