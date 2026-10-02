@@ -295,6 +295,10 @@ def jaaroverzicht():
                 rec[veld] = waarde
                 rec[f"_{veld}_berekend"] = True
 
+        # Gas in m³ is puur informatief (naast het kWh-jaarverbruik),
+        # altijd rechtstreeks uit de maandsommen — geen apart opslagveld.
+        rec["jaarverbruik_gas_m3_berekend"] = componenten.get(jaar, {}).get("gas_m3")
+
         n_maanden = maand_counts.get(jaar)
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden

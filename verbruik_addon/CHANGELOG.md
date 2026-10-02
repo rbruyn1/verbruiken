@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.10
+- Jaaroverzicht: aparte "Gas (m³)"-kolom toegevoegd naast de bestaande
+  kWh-waarde — automatisch berekend uit de som van de maandelijkse
+  gas-m³-invoer.
+
 ## 0.2.9
 - Verbruikscijfers (kWh/m³) in de maand- en jaaroverzichtstabellen tonen
   nu consequent 2 cijfers na de komma, i.p.v. de eerdere mix van 0/1
