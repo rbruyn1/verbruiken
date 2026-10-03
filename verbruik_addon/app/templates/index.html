@@ -66,11 +66,22 @@ const jaarZelfverbruik = {{ jaar_zelfverbruik | tojson }};
 Chart.defaults.color = "#6b7280";
 Chart.defaults.borderColor = "#e0e2e7";
 
+// Eén kleurenpalet voor alle grafieken, zodat dezelfde grootheid overal
+// dezelfde kleur heeft (gas = paars, dal = oranje, zon = groen, ...).
+const KLEUR = {
+    piek: "#3576c9",
+    dal:  "#f5a623",
+    zelf: "#2e9e52",
+    zon:  "#2e9e52",
+    gas:  "#8e44ad",
+    elek: "#3576c9"
+};
+
 if (heeftGas) {
     new Chart(document.getElementById("gasChart"), {
         type: "bar",
         data: { labels: labels, datasets: [
-            { label: "Gas kWh", data: gas, backgroundColor: "#f5a623" }
+            { label: "Gas kWh", data: gas, backgroundColor: KLEUR.gas }
         ]},
         options: {
             responsive: true,
@@ -84,8 +95,8 @@ if (heeftGas) {
 new Chart(document.getElementById("elekChart"), {
     type: "bar",
     data: { labels: labels, datasets: [
-        { label: "Piek verbruik", data: piek, backgroundColor: "#3576c9", stack: "verbruik" },
-        { label: "Dal verbruik", data: dal, backgroundColor: "#f5a623", stack: "verbruik" }
+        { label: "Piek verbruik", data: piek, backgroundColor: KLEUR.piek, stack: "verbruik" },
+        { label: "Dal verbruik", data: dal, backgroundColor: KLEUR.dal, stack: "verbruik" }
     ]},
     options: {
         responsive: true,
@@ -98,8 +109,8 @@ new Chart(document.getElementById("elekChart"), {
 new Chart(document.getElementById("verschilChart"), {
     type: "line",
     data: { labels: labels, datasets: [
-        { label: "verschil -1 jaar elektriciteit", data: verschilElek, borderColor: "#3576c9", backgroundColor: "#3576c9", tension: 0.15, pointRadius: 2 },
-        ...(heeftGas ? [{ label: "verschil -1 jaar gas", data: verschilGas, borderColor: "#f5a623", backgroundColor: "#f5a623", tension: 0.15, pointRadius: 2 }] : [])
+        { label: "verschil -1 jaar elektriciteit", data: verschilElek, borderColor: KLEUR.elek, backgroundColor: KLEUR.elek, tension: 0.15, pointRadius: 2 },
+        ...(heeftGas ? [{ label: "verschil -1 jaar gas", data: verschilGas, borderColor: KLEUR.gas, backgroundColor: KLEUR.gas, tension: 0.15, pointRadius: 2 }] : [])
     ]},
     options: {
         responsive: true,
@@ -112,9 +123,9 @@ new Chart(document.getElementById("verschilChart"), {
 new Chart(document.getElementById("jaartotalenChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
-        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: "#3576c9" },
-        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: "#f5a623" }] : []),
-        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: "#2e9e52" }
+        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: KLEUR.elek },
+        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: KLEUR.gas }] : []),
+        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: KLEUR.zon }
     ]},
     options: {
         responsive: true,
@@ -126,10 +137,10 @@ new Chart(document.getElementById("jaartotalenChart"), {
 new Chart(document.getElementById("jaartotalenEnergieChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
-        { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: "#3576c9", stack: "energie" },
-        { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: "#f5a623", stack: "energie" },
-        { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: "#2e9e52", stack: "energie" },
-        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: "#8e44ad", stack: "energie" }] : [])
+        { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: KLEUR.piek, stack: "energie" },
+        { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: KLEUR.dal, stack: "energie" },
+        { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: KLEUR.zelf, stack: "energie" },
+        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: KLEUR.gas, stack: "energie" }] : [])
     ]},
     options: {
         responsive: true,
@@ -142,10 +153,10 @@ new Chart(document.getElementById("jaartotalenEnergieChart"), {
 new Chart(document.getElementById("totaalEnergieChart"), {
     type: "bar",
     data: { labels: labels, datasets: [
-        { label: "Piek verbruik (net)", data: piek, backgroundColor: "#3576c9", stack: "energie" },
-        { label: "Dal verbruik (net)", data: dal, backgroundColor: "#f5a623", stack: "energie" },
-        { label: "Zelfverbruik zon", data: zelfverbruik, backgroundColor: "#2e9e52", stack: "energie" },
-        ...(heeftGas ? [{ label: "Gas", data: gas, backgroundColor: "#8e44ad", stack: "energie" }] : [])
+        { label: "Piek verbruik (net)", data: piek, backgroundColor: KLEUR.piek, stack: "energie" },
+        { label: "Dal verbruik (net)", data: dal, backgroundColor: KLEUR.dal, stack: "energie" },
+        { label: "Zelfverbruik zon", data: zelfverbruik, backgroundColor: KLEUR.zelf, stack: "energie" },
+        ...(heeftGas ? [{ label: "Gas", data: gas, backgroundColor: KLEUR.gas, stack: "energie" }] : [])
     ]},
     options: {
         responsive: true,

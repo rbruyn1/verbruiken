@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.18
+- Grafieken: één centraal kleurenpalet. Gas is nu overal paars (was
+  oranje in "Gasverbruik", "Jaartotalen" en "verschil -1 jaar", wat
+  botste met Dal); piek = blauw, dal = oranje, zon/zelfverbruik = groen.
+
 ## 0.2.17
 - Tabellen herordend per thema: net → zon → batterij → kosten/vergelijking,
   met gas als laatste blok en dunne scheidingslijnen tussen de blokken.
