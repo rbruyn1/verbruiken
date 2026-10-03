@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.15
+- "Jaartotalen"-grafiek toont nu dezelfde opbouw als "Totaal
+  energieverbruik": piek + dal (net) + zelfverbruik zon + gas
+  gestapeld, per jaar i.p.v. de vorige simpelere afname/gas/zon-weergave.
+
 ## 0.2.14
 - Fix: grafieken hadden geen vaste hoogte, waardoor een grafiek die de
   volle breedte kreeg (bv. "Jaartotalen" bij Binkom, oneven aantal

@@ -142,18 +142,23 @@ def _jaartotalen(woning):
     conn = get_connection()
     rows = conn.execute(
         """SELECT jaar,
-                  SUM(totaal_verbruik_afname) as elek,
+                  SUM(piek_verbruik) as piek,
+                  SUM(dal_verbruik) as dal,
                   SUM(gas_kwh) as gas,
-                  SUM(zonopbrengst_totaal) as zon
+                  SUM(zonopbrengst_totaal) as zon,
+                  SUM(totaal_export) as export
            FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
         (woning,),
     ).fetchall()
     conn.close()
     return {
         "jaar_labels": [str(r["jaar"]) for r in rows],
-        "jaar_elektriciteit": [r["elek"] for r in rows],
+        "jaar_piek": [r["piek"] for r in rows],
+        "jaar_dal": [r["dal"] for r in rows],
         "jaar_gas": [r["gas"] for r in rows],
-        "jaar_zon": [r["zon"] for r in rows],
+        "jaar_zelfverbruik": [
+            (r["zon"] - (r["export"] or 0)) if r["zon"] is not None else None for r in rows
+        ],
     }
 
 

@@ -53,9 +53,10 @@ const verschilGas = {{ verschil_gas | tojson }};
 const heeftGas = {{ heeft_gas | tojson }};
 
 const jaarLabels = {{ jaar_labels | tojson }};
-const jaarElektriciteit = {{ jaar_elektriciteit | tojson }};
+const jaarPiek = {{ jaar_piek | tojson }};
+const jaarDal = {{ jaar_dal | tojson }};
 const jaarGas = {{ jaar_gas | tojson }};
-const jaarZon = {{ jaar_zon | tojson }};
+const jaarZelfverbruik = {{ jaar_zelfverbruik | tojson }};
 
 Chart.defaults.color = "#6b7280";
 Chart.defaults.borderColor = "#e0e2e7";
@@ -106,14 +107,16 @@ new Chart(document.getElementById("verschilChart"), {
 new Chart(document.getElementById("jaartotalenChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
-        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: "#3576c9" },
-        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: "#f5a623" }] : []),
-        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: "#2e9e52" }
+        { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: "#3576c9", stack: "energie" },
+        { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: "#f5a623", stack: "energie" },
+        { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: "#2e9e52", stack: "energie" },
+        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: "#8e44ad", stack: "energie" }] : [])
     ]},
     options: {
         responsive: true,
-            maintainAspectRatio: false,
-        plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } }
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: "Jaartotalen — totaal energieverbruik (kWh)", color: "#1c1f24", font: { size: 16 } } },
+        scales: { x: { stacked: true }, y: { stacked: true } }
     }
 });
 
