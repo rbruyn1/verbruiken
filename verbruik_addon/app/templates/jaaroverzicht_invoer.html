@@ -7,7 +7,7 @@
     <div class="row2">
         <div>
             <label>Woning</label>
-            <select name="woning" required>
+            <select name="woning" id="woning-select" required>
                 {% for w in woningen %}
                 <option value="{{ w }}" {{ "selected" if (bestaand and bestaand.woning == w) or (woning == w) }}>{{ w }}</option>
                 {% endfor %}
@@ -20,17 +20,20 @@
     </div>
 
     {% for veld, label in velden %}
-    <label>{{ label }}</label>
-    {% if veld == "jaarverbruik_gas_eenheid" %}
-    <select name="{{ veld }}">
-        <option value="">–</option>
-        <option value="m3" {{ "selected" if bestaand and bestaand[veld] == "m3" }}>m³</option>
-        <option value="kWh" {{ "selected" if bestaand and bestaand[veld] == "kWh" }}>kWh</option>
-    </select>
-    {% else %}
-    <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel"
-           {% if veld in berekend and berekend[veld] is not none %}data-berekend="{{ berekend[veld] }}"{% endif %}>
-    {% endif %}
+    {% set is_gas_veld = veld in ('jaarverbruik_gas', 'jaarverbruik_gas_eenheid', 'jaarverbruik_gas_kost_eur', 'verschil_gas_vorig_jaar_m3', 'verschil_gas_vorig_jaar_kwh') %}
+    <div class="{{ 'gas-veld' if is_gas_veld }}">
+        <label>{{ label }}</label>
+        {% if veld == "jaarverbruik_gas_eenheid" %}
+        <select name="{{ veld }}">
+            <option value="">–</option>
+            <option value="m3" {{ "selected" if bestaand and bestaand[veld] == "m3" }}>m³</option>
+            <option value="kWh" {{ "selected" if bestaand and bestaand[veld] == "kWh" }}>kWh</option>
+        </select>
+        {% else %}
+        <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel"
+               {% if veld in berekend and berekend[veld] is not none %}data-berekend="{{ berekend[veld] }}"{% endif %}>
+        {% endif %}
+    </div>
     {% endfor %}
 
     <button type="submit">Opslaan</button>
@@ -53,5 +56,18 @@ document.querySelectorAll("input[data-berekend]").forEach(function (el) {
         el.value = "";
     });
 });
+
+// Binkom heeft geen gasaansluiting: gasvelden tonen/verbergen op basis
+// van de gekozen woning, ook live bij het wisselen in de dropdown.
+const woningSelect = document.getElementById("woning-select");
+const gasVelden = document.querySelectorAll(".gas-veld");
+function updateGasVelden() {
+    const verbergen = woningSelect.value === "Binkom";
+    gasVelden.forEach(function (el) { el.style.display = verbergen ? "none" : ""; });
+}
+if (woningSelect) {
+    updateGasVelden();
+    woningSelect.addEventListener("change", updateGasVelden);
+}
 </script>
 {% endblock %}

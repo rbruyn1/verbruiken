@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.13
+- Alle gas-gerelateerde kolommen en invoervelden verborgen voor Binkom
+  (geen gasaansluiting): maandtabel, jaaroverzicht-tabel, en beide
+  invoerformulieren (live togglend bij het wisselen van woning in de
+  dropdown, niet enkel bij het laden van de pagina). De grafieken
+  verborgen de gasgrafiek al eerder.
+
 ## 0.2.12
 - Layout: pagina is breder (max 1600px i.p.v. 1100px) en tabellen zitten
   nu in hun eigen scrollbaar kader (kleinere letter, minder padding)

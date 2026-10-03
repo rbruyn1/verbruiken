@@ -7,7 +7,7 @@
     <div class="row2">
         <div>
             <label>Woning</label>
-            <select name="woning" required>
+            <select name="woning" id="woning-select" required>
                 {% for w in woningen %}
                 <option value="{{ w }}" {{ "selected" if (bestaand and bestaand.woning == w) or (woning == w) }}>{{ w }}</option>
                 {% endfor %}
@@ -25,8 +25,11 @@
     </div>
 
     {% for veld, label in velden %}
-    <label>{{ label }}</label>
-    <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    {% set is_gas_veld = veld in ('gas_m3', 'gas_kwh', 'prijs_gas_eur') %}
+    <div class="{{ 'gas-veld' if is_gas_veld }}">
+        <label>{{ label }}</label>
+        <input type="text" id="{{ veld }}" name="{{ veld }}" value="{{ bestaand[veld] if bestaand and bestaand[veld] is not none else '' }}" placeholder="optioneel">
+    </div>
     {% endfor %}
 
     <button type="submit">Opslaan</button>
@@ -69,6 +72,19 @@ function koppelAutoTotaal(piekId, dalId, totaalId) {
 }
 koppelAutoTotaal("piek_verbruik", "dal_verbruik", "totaal_verbruik_afname");
 koppelAutoTotaal("piek_export", "dal_export", "totaal_export");
+
+// Binkom heeft geen gasaansluiting: gasvelden tonen/verbergen op basis
+// van de gekozen woning, ook live bij het wisselen in de dropdown.
+const woningSelect = document.getElementById("woning-select");
+const gasVelden = document.querySelectorAll(".gas-veld");
+function updateGasVelden() {
+    const verbergen = woningSelect.value === "Binkom";
+    gasVelden.forEach(function (el) { el.style.display = verbergen ? "none" : ""; });
+}
+if (woningSelect) {
+    updateGasVelden();
+    woningSelect.addEventListener("change", updateGasVelden);
+}
 
 // Gas kWh = gas m³ × laatst gekende werkelijke omzetfactor (die factor
 // schommelt in realiteit, dus GEEN vaste constante — zie toelichting bij
