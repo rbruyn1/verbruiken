@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.12
+- Layout: pagina is breder (max 1600px i.p.v. 1100px) en tabellen zitten
+  nu in hun eigen scrollbaar kader (kleinere letter, minder padding)
+  i.p.v. dat de hele pagina moest scrollen om brede tabellen te zien —
+  vooral merkbaar bij het jaaroverzicht met veel kolommen.
+
 ## 0.2.11
 - "Uitgespaard met zonnepanelen" wordt nu automatisch berekend (fallback,
   overschrijfbaar) als `(jaarprijs afname × zelfverbruik) + (jaarprijs
