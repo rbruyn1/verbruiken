@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.16
+- Vorige wijziging teruggedraaid: de oorspronkelijke "Jaartotalen"-grafiek
+  (elektriciteit afname/gas/zon) staat terug. De piek/dal/zelf/gas-versie
+  is een aparte extra grafiek geworden i.p.v. een vervanging.
+
 ## 0.2.15
 - "Jaartotalen"-grafiek toont nu dezelfde opbouw als "Totaal
   energieverbruik": piek + dal (net) + zelfverbruik zon + gas

@@ -29,6 +29,9 @@
         <canvas id="jaartotalenChart"></canvas>
     </div>
     <div class="chart-card">
+        <canvas id="jaartotalenEnergieChart"></canvas>
+    </div>
+    <div class="chart-card">
         <canvas id="totaalEnergieChart"></canvas>
     </div>
 </div>
@@ -53,6 +56,8 @@ const verschilGas = {{ verschil_gas | tojson }};
 const heeftGas = {{ heeft_gas | tojson }};
 
 const jaarLabels = {{ jaar_labels | tojson }};
+const jaarElektriciteit = {{ jaar_elektriciteit | tojson }};
+const jaarZon = {{ jaar_zon | tojson }};
 const jaarPiek = {{ jaar_piek | tojson }};
 const jaarDal = {{ jaar_dal | tojson }};
 const jaarGas = {{ jaar_gas | tojson }};
@@ -105,6 +110,20 @@ new Chart(document.getElementById("verschilChart"), {
 });
 
 new Chart(document.getElementById("jaartotalenChart"), {
+    type: "bar",
+    data: { labels: jaarLabels, datasets: [
+        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: "#3576c9" },
+        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: "#f5a623" }] : []),
+        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: "#2e9e52" }
+    ]},
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } }
+    }
+});
+
+new Chart(document.getElementById("jaartotalenEnergieChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
         { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: "#3576c9", stack: "energie" },
