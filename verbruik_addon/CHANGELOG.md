@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.19
+- Grafieken: zonopbrengst en zelfverbruik zon waren allebei groen terwijl
+  het verschillende grootheden zijn (zelfverbruik is een deel van de
+  opbrengst). Zonopbrengst is nu teal, zelfverbruik blijft groen.
+
 ## 0.2.18
 - Grafieken: één centraal kleurenpalet. Gas is nu overal paars (was
   oranje in "Gasverbruik", "Jaartotalen" en "verschil -1 jaar", wat
