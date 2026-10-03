@@ -28,6 +28,9 @@
     <div class="chart-card">
         <canvas id="jaartotalenChart"></canvas>
     </div>
+    <div class="chart-card">
+        <canvas id="totaalEnergieChart"></canvas>
+    </div>
 </div>
 {% endif %}
 
@@ -44,6 +47,7 @@ const labels = {{ labels | tojson }};
 const piek = {{ piek | tojson }};
 const dal = {{ dal | tojson }};
 const gas = {{ gas | tojson }};
+const zelfverbruik = {{ zelfverbruik | tojson }};
 const verschilElek = {{ verschil_elek | tojson }};
 const verschilGas = {{ verschil_gas | tojson }};
 const heeftGas = {{ heeft_gas | tojson }};
@@ -64,6 +68,7 @@ if (heeftGas) {
         ]},
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { title: { display: true, text: "Gasverbruik", color: "#1c1f24", font: { size: 16 } } },
             scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
         }
@@ -78,6 +83,7 @@ new Chart(document.getElementById("elekChart"), {
     ]},
     options: {
         responsive: true,
+            maintainAspectRatio: false,
         plugins: { title: { display: true, text: "Elektriciteitsverbruik", color: "#1c1f24", font: { size: 16 } } },
         scales: { x: { stacked: true, ticks: { maxRotation: 90, minRotation: 90 } }, y: { stacked: true } }
     }
@@ -91,6 +97,7 @@ new Chart(document.getElementById("verschilChart"), {
     ]},
     options: {
         responsive: true,
+            maintainAspectRatio: false,
         plugins: { title: { display: true, text: "verschil -1 jaar (negatief is minder verbruikt)", color: "#1c1f24", font: { size: 16 } } },
         scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
     }
@@ -105,7 +112,24 @@ new Chart(document.getElementById("jaartotalenChart"), {
     ]},
     options: {
         responsive: true,
+            maintainAspectRatio: false,
         plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } }
+    }
+});
+
+new Chart(document.getElementById("totaalEnergieChart"), {
+    type: "bar",
+    data: { labels: labels, datasets: [
+        { label: "Piek verbruik (net)", data: piek, backgroundColor: "#3576c9", stack: "energie" },
+        { label: "Dal verbruik (net)", data: dal, backgroundColor: "#f5a623", stack: "energie" },
+        { label: "Zelfverbruik zon", data: zelfverbruik, backgroundColor: "#2e9e52", stack: "energie" },
+        ...(heeftGas ? [{ label: "Gas", data: gas, backgroundColor: "#8e44ad", stack: "energie" }] : [])
+    ]},
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: "Totaal energieverbruik (kWh) — net + zelf verbruikte zon + gas", color: "#1c1f24", font: { size: 16 } } },
+        scales: { x: { stacked: true, ticks: { maxRotation: 90, minRotation: 90 } }, y: { stacked: true } }
     }
 });
 </script>

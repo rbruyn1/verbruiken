@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.14
+- Fix: grafieken hadden geen vaste hoogte, waardoor een grafiek die de
+  volle breedte kreeg (bv. "Jaartotalen" bij Binkom, oneven aantal
+  grafieken) onevenredig hoog uitviel. Alle grafiekkaarten hebben nu
+  een vaste hoogte (320px), ongeacht hun breedte.
+- Nieuwe grafiek "Totaal energieverbruik (kWh)": piek + dal (net) +
+  zelfverbruik zon + gas gestapeld per maand, voor een volledig beeld
+  van het werkelijke energieverbruik over alle bronnen heen.
+
 ## 0.2.13
 - Alle gas-gerelateerde kolommen en invoervelden verborgen voor Binkom
   (geen gasaansluiting): maandtabel, jaaroverzicht-tabel, en beide

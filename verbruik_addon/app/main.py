@@ -101,6 +101,7 @@ def index():
     labels = []
     piek, dal = [], []
     gas = []
+    zelfverbruik = []
     verschil_elek, verschil_gas = [], []
     heeft_gas = any(r.get("gas_kwh") is not None for r in records)
 
@@ -109,6 +110,10 @@ def index():
         piek.append(r.get("piek_verbruik"))
         dal.append(r.get("dal_verbruik"))
         gas.append(r.get("gas_kwh"))
+        if r.get("zonopbrengst_totaal") is not None:
+            zelfverbruik.append(r["zonopbrengst_totaal"] - (r.get("totaal_export") or 0))
+        else:
+            zelfverbruik.append(None)
 
         vorig = by_key.get((r["jaar"] - 1, r["maand"]))
         enriched = verrijk(r, vorig)
@@ -124,6 +129,7 @@ def index():
         piek=piek,
         dal=dal,
         gas=gas,
+        zelfverbruik=zelfverbruik,
         verschil_elek=verschil_elek,
         verschil_gas=verschil_gas,
         maandrecords=_enriched_records(woning),
