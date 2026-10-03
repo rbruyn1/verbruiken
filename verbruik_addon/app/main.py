@@ -82,6 +82,25 @@ def _get_records(woning):
     return [dict(r) for r in rows]
 
 
+def _heeft_gas(woning):
+    """Een woning heeft gas zodra er in de hele historiek ooit gasdata is
+    ingevuld. Tienen blijft dus gas tonen (ook als er later geen nieuwe
+    gasmaanden meer bijkomen); Binkom heeft nooit gasdata en toont het niet."""
+    conn = get_connection()
+    row = conn.execute(
+        """SELECT 1 FROM maandverbruik
+           WHERE woning=? AND ((gas_kwh IS NOT NULL AND gas_kwh != 0)
+                            OR (gas_m3 IS NOT NULL AND gas_m3 != 0)) LIMIT 1""",
+        (woning,),
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def _gas_woningen():
+    return [w for w in WONINGEN if _heeft_gas(w)]
+
+
 def _enriched_records(woning):
     records = _get_records(woning)
     by_key = {(r["jaar"], r["maand"]): r for r in records}
@@ -103,7 +122,7 @@ def index():
     gas = []
     zelfverbruik = []
     verschil_elek, verschil_gas = [], []
-    heeft_gas = any(r.get("gas_kwh") is not None for r in records)
+    heeft_gas = _heeft_gas(woning)
 
     for r in records:
         labels.append(f"{MAANDNAMEN[r['maand']]}-{str(r['jaar'])[2:]}")
@@ -229,6 +248,7 @@ def invoer(woning=None, jaar=None, maand=None):
         jaar=jaar,
         maand=maand,
         gas_factor=_laatste_gas_factor(woning or WONINGEN[0]),
+        gas_woningen=_gas_woningen(),
     )
 
 
@@ -354,6 +374,7 @@ def jaaroverzicht():
         woningen=WONINGEN,
         woning=woning,
         records=resultaten,
+        heeft_gas=_heeft_gas(woning),
         maandrecords=_enriched_records(woning),
         maandnamen=MAANDNAMEN,
     )
@@ -412,6 +433,7 @@ def jaaroverzicht_invoer(woning=None, jaar=None):
         woning=woning,
         jaar=jaar,
         berekend=berekend,
+        gas_woningen=_gas_woningen(),
     )
 
 

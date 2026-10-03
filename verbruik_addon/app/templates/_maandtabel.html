@@ -7,12 +7,16 @@
             <th>Dal</th>
             <th>Afname (fact.)</th>
             <th>Export (fact.)</th>
-            <th>Zon</th>
+            <th class="grp">Zon</th>
             <th>Zelfverbr. %</th>
-            {% if woning != 'Binkom' %}<th>Gas kWh</th>{% endif %}
-            <th>€/kWh afn.</th>
+            <th class="grp">€/kWh afn.</th>
             <th>€/kWh inj.</th>
             <th>Δ elek. vs -1j</th>
+            {% if heeft_gas %}
+            <th class="grp">Gas m³</th>
+            <th>Gas kWh</th>
+            <th>Δ gas vs -1j (kWh)</th>
+            {% endif %}
             <th></th>
         </tr>
     </thead>
@@ -24,14 +28,20 @@
             <td>{{ "%.2f"|format(r.dal_verbruik) if r.dal_verbruik is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.totaal_verbruik_afname) if r.totaal_verbruik_afname is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.totaal_export) if r.totaal_export is not none else "–" }}</td>
-            <td>{{ "%.2f"|format(r.zonopbrengst_totaal) if r.zonopbrengst_totaal is not none else "–" }}</td>
+            <td class="grp">{{ "%.2f"|format(r.zonopbrengst_totaal) if r.zonopbrengst_totaal is not none else "–" }}</td>
             <td>{{ "%.1f"|format(r.zelfverbruik_pct) + "%" if r.zelfverbruik_pct is not none else "–" }}</td>
-            {% if woning != 'Binkom' %}<td>{{ "%.2f"|format(r.gas_kwh) if r.gas_kwh is not none else "–" }}</td>{% endif %}
-            <td>{{ "%.3f"|format(r.gem_prijs_kwh_afname) if r.gem_prijs_kwh_afname is not none else "–" }}</td>
+            <td class="grp">{{ "%.3f"|format(r.gem_prijs_kwh_afname) if r.gem_prijs_kwh_afname is not none else "–" }}</td>
             <td>{{ "%.3f"|format(r.gem_prijs_kwh_injectie) if r.gem_prijs_kwh_injectie is not none else "–" }}</td>
             <td class="{{ 'neg' if r.verschil_vorig_jaar_elektriciteit and r.verschil_vorig_jaar_elektriciteit > 0 else 'pos' if r.verschil_vorig_jaar_elektriciteit else '' }}">
                 {{ "%+.2f"|format(r.verschil_vorig_jaar_elektriciteit) if r.verschil_vorig_jaar_elektriciteit is not none else "–" }}
             </td>
+            {% if heeft_gas %}
+            <td class="grp">{{ "%.2f"|format(r.gas_m3) if r.gas_m3 is not none else "–" }}</td>
+            <td>{{ "%.2f"|format(r.gas_kwh) if r.gas_kwh is not none else "–" }}</td>
+            <td class="{{ 'neg' if r.verschil_vorig_jaar_gas and r.verschil_vorig_jaar_gas > 0 else 'pos' if r.verschil_vorig_jaar_gas else '' }}">
+                {{ "%+.2f"|format(r.verschil_vorig_jaar_gas) if r.verschil_vorig_jaar_gas is not none else "–" }}
+            </td>
+            {% endif %}
             <td><a class="edit" href="{{ url_for('invoer', woning=r.woning, jaar=r.jaar, maand=r.maand) }}">bewerk</a></td>
         </tr>
         {% endfor %}

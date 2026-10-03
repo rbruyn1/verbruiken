@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.17
+- Tabellen herordend per thema: net → zon → batterij → kosten/vergelijking,
+  met gas als laatste blok en dunne scheidingslijnen tussen de blokken.
+  Jaaroverzicht: "Δ elek vs -1j" staat nu naast de elektriciteitskolommen
+  i.p.v. helemaal rechts.
+- Maandoverzicht: "Δ gas vs -1j" en "Gas m³" toegevoegd (naast Gas kWh).
+- Gaskolommen en -invoervelden worden nu data-gedreven getoond: zodra een
+  woning in zijn historiek gasdata heeft (Tienen) blijven ze zichtbaar,
+  ook als er later geen nieuwe gasmaanden meer bijkomen; woningen zonder
+  gasdata (Binkom) tonen ze niet. Vervangt de hardgecodeerde Binkom-check.
+
 ## 0.2.16
 - Vorige wijziging teruggedraaid: de oorspronkelijke "Jaartotalen"-grafiek
   (elektriciteit afname/gas/zon) staat terug. De piek/dal/zelf/gas-versie

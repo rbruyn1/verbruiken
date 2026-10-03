@@ -87,3 +87,5 @@ form.entry button:hover { background: var(--accent-dark); }
 @media (max-width: 800px) {
     .chart-grid { grid-template-columns: 1fr; }
 }
+/* Dunne scheiding tussen kolomblokken (net / zon / batterij / gas) */
+th.grp, td.grp { border-left: 2px solid var(--border); }
