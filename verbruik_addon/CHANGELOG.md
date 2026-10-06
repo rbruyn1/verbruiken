@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.20
+- Maandoverzicht: kolom "Zelfverbruik" (kWh, = zonopbrengst - export)
+  toegevoegd naast het bestaande percentage.
+
 ## 0.2.19
 - Grafieken: zonopbrengst en zelfverbruik zon waren allebei groen terwijl
   het verschillende grootheden zijn (zelfverbruik is een deel van de
