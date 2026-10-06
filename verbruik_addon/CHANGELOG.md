@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.23
+- Jaaroverzicht: kolom "Zelfverbr. %" (zelfverbruik / zonopbrengst)
+  toegevoegd, naast het zelfverbruik in kWh.
+
 ## 0.2.22
 - Jaaroverzicht: kolom "Zonopbrengst (kWh)" (totale opbrengst van het
   jaar, som van de maanden) toegevoegd als eerste kolom van het zonblok.

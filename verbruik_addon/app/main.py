@@ -365,6 +365,9 @@ def jaaroverzicht():
         )
         # Totale zonopbrengst van het jaar (som van de maanden); puur informatief.
         rec["zonopbrengst_kwh_berekend"] = zon_j
+        rec["zelfverbruik_pct_berekend"] = (
+            (zon_j - (export_j or 0)) / zon_j * 100 if zon_j else None
+        )
 
         n_maanden = maand_counts.get(jaar)
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(

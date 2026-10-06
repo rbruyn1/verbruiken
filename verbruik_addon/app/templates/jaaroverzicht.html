@@ -26,6 +26,7 @@
             <th class="grp">Zonopbrengst (kWh)</th>
             <th>Zon export (kWh)</th>
             <th>Zelfverbruik (kWh)</th>
+            <th>Zelfverbr. %</th>
             <th>Uitgespaard €</th>
             <th class="grp">Batterij laden/ontladen (kWh)</th>
             <th>Batterij €</th>
@@ -62,6 +63,7 @@
                 {% if r._opladen_zon_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>{{ "%.2f"|format(r.zelfverbruik_kwh_berekend) if r.zelfverbruik_kwh_berekend is not none else "–" }}</td>
+            <td>{{ "%.1f"|format(r.zelfverbruik_pct_berekend) ~ "%" if r.zelfverbruik_pct_berekend is not none else "–" }}</td>
             <td>
                 {{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}
                 {% if r._uitgespaard_zonnepanelen_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
