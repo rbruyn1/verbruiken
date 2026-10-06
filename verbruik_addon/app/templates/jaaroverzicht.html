@@ -23,7 +23,8 @@
             <th>Elek. €</th>
             <th>Elek. €/maand</th>
             <th>Δ elek vs -1j</th>
-            <th class="grp">Zon export (kWh)</th>
+            <th class="grp">Zonopbrengst (kWh)</th>
+            <th>Zon export (kWh)</th>
             <th>Zelfverbruik (kWh)</th>
             <th>Uitgespaard €</th>
             <th class="grp">Batterij laden/ontladen (kWh)</th>
@@ -55,7 +56,8 @@
                 {{ "%.2f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}
                 {% if r._verschil_elektriciteit_vorig_jaar_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
-            <td class="grp">
+            <td class="grp">{{ "%.2f"|format(r.zonopbrengst_kwh_berekend) if r.zonopbrengst_kwh_berekend is not none else "–" }}</td>
+            <td>
                 {{ "%.2f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}
                 {% if r._opladen_zon_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
