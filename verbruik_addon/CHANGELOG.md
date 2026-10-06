@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.21
+- Jaaroverzicht: kolom "Zelfverbruik (kWh)" toegevoegd (zonopbrengst -
+  export, uit de maandsommen), tussen Zon export en Uitgespaard.
+
 ## 0.2.20
 - Maandoverzicht: kolom "Zelfverbruik" (kWh, = zonopbrengst - export)
   toegevoegd naast het bestaande percentage.

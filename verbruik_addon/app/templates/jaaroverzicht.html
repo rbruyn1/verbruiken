@@ -24,6 +24,7 @@
             <th>Elek. €/maand</th>
             <th>Δ elek vs -1j</th>
             <th class="grp">Zon export (kWh)</th>
+            <th>Zelfverbruik (kWh)</th>
             <th>Uitgespaard €</th>
             <th class="grp">Batterij laden/ontladen (kWh)</th>
             <th>Batterij €</th>
@@ -58,6 +59,7 @@
                 {{ "%.2f"|format(r.opladen_zon_kwh) if r.opladen_zon_kwh is not none else "–" }}
                 {% if r._opladen_zon_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
+            <td>{{ "%.2f"|format(r.zelfverbruik_kwh_berekend) if r.zelfverbruik_kwh_berekend is not none else "–" }}</td>
             <td>
                 {{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}
                 {% if r._uitgespaard_zonnepanelen_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}

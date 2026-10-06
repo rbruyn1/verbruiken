@@ -356,6 +356,14 @@ def jaaroverzicht():
         # altijd rechtstreeks uit de maandsommen — geen apart opslagveld.
         rec["jaarverbruik_gas_m3_berekend"] = componenten.get(jaar, {}).get("gas_m3")
 
+        # Zelfverbruik zon (kWh) per jaar = zonopbrengst - export; puur
+        # informatief, altijd uit de maandsommen (geen apart opslagveld).
+        zon_j = componenten.get(jaar, {}).get("zon")
+        export_j = componenten.get(jaar, {}).get("export")
+        rec["zelfverbruik_kwh_berekend"] = (
+            zon_j - (export_j or 0) if zon_j is not None else None
+        )
+
         n_maanden = maand_counts.get(jaar)
         rec["gem_maand_elektriciteit"] = jaaroverzicht_gem_per_maand(
             rec.get("jaarverbruik_elektriciteit_kost_eur"), n_maanden
