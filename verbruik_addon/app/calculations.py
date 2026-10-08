@@ -30,26 +30,28 @@ def prijs_per_kwh_gas(rec):
 
 def gem_prijs_kwh_afname(rec):
     verbruik = rec.get("totaal_verbruik_afname") or 0
-    if verbruik == 0:
+    if verbruik == 0 or rec.get("engie_afname_eur") is None:
         return None
-    return (rec.get("engie_afname_eur") or 0) / verbruik
+    return rec["engie_afname_eur"] / verbruik
 
 
 def gem_prijs_kwh_injectie(rec):
     export = rec.get("totaal_export") or 0
-    if export == 0:
+    if export == 0 or rec.get("engie_injectie_eur") is None:
         return None
-    return (rec.get("engie_injectie_eur") or 0) / export * -1
+    return rec["engie_injectie_eur"] / export * -1
 
 
 def verschil_vorig_jaar(huidig_rec, vorig_jaar_rec, veld):
     """veld: 'totaal_verbruik_afname' | 'zonopbrengst_totaal' | 'gas_kwh'"""
     if vorig_jaar_rec is None:
         return None
-    huidig = huidig_rec.get(veld) or 0
-    vorig = vorig_jaar_rec.get(veld) or 0
-    if huidig == 0:
-        return 0
+    huidig = huidig_rec.get(veld)
+    vorig = vorig_jaar_rec.get(veld)
+    # Een ontbrekende of lege (0) maand is geen verbruik van 0, maar "geen
+    # data": dan geen verschil tonen i.p.v. het volledige verbruik.
+    if not huidig or not vorig:
+        return None
     return huidig - vorig
 
 

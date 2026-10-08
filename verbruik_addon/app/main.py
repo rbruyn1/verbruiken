@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from pathlib import Path
+import calendar
 import os
+from datetime import date
 from models import get_connection, init_db
 from calculations import verrijk, jaaroverzicht_gem_per_maand
 
@@ -56,6 +58,7 @@ MAAND_INVOERVELDEN = [
 JAAR_INVOERVELDEN = [
     ("jaarverbruik_elektriciteit_kwh", "Jaarverbruik elektriciteit (kWh) — auto uit maandsommen, overschrijfbaar (bv. als Engie achterloopt)"),
     ("jaarverbruik_elektriciteit_kost_eur", "Jaarverbruik elektriciteit — kost (€) — auto, overschrijfbaar"),
+    ("vaste_kost_uur", "Vaste kost (€/uur) — vaste bijdrage in de Engie-app; leeg = waarde van vorig jaar"),
     ("jaarverbruik_gas", "Jaarverbruik gas"),
     ("jaarverbruik_gas_eenheid", "Eenheid gas (m3 / kWh)"),
     ("jaarverbruik_gas_kost_eur", "Jaarverbruik gas — kost (€)"),
@@ -252,9 +255,37 @@ def invoer(woning=None, jaar=None, maand=None):
     )
 
 
+def _huidige_maand():
+    vandaag = date.today()
+    return (vandaag.year, vandaag.month)
+
+
+def _vaste_kost_resolver(woning):
+    """Functie jaar -> vaste kost (€/uur): de waarde van dat jaar, anders de
+    laatst gekende van een eerder jaar, anders None."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT jaar, vaste_kost_uur FROM jaaroverzicht
+           WHERE woning=? AND vaste_kost_uur IS NOT NULL ORDER BY jaar""",
+        (woning,),
+    ).fetchall()
+    conn.close()
+    bekend = [(r["jaar"], r["vaste_kost_uur"]) for r in rows]
+
+    def resolve(jaar):
+        waarde = None
+        for j, v in bekend:
+            if j <= jaar:
+                waarde = v
+        return waarde
+
+    return resolve
+
+
 def _jaartotalen_componenten(woning):
     """Som per jaar van de maandvelden die als basis dienen voor de
-    auto-berekende jaaroverzicht-velden."""
+    auto-berekende jaaroverzicht-velden, plus de variabele energieprijs
+    en de vergelijking met dezelfde maanden van vorig jaar."""
     conn = get_connection()
     maand_counts, componenten = {}, {}
     for r in conn.execute(
@@ -273,57 +304,122 @@ def _jaartotalen_componenten(woning):
     ):
         maand_counts[r["jaar"]] = r["n"]
         componenten[r["jaar"]] = dict(r)
+    maanden = conn.execute(
+        """SELECT jaar, maand, totaal_verbruik_afname AS afname, engie_afname_eur AS eur,
+                  gas_kwh, gas_m3
+           FROM maandverbruik WHERE woning=? ORDER BY jaar, maand""",
+        (woning,),
+    ).fetchall()
     conn.close()
+
+    vaste_kost = _vaste_kost_resolver(woning)
+    huidige = _huidige_maand()
+
+    def uren(jaar, maand):
+        return 24 * calendar.monthrange(jaar, maand)[1]
+
+    # Onvolledige maanden: enkel waar Engie echt kan achterlopen, dus de
+    # lopende maand, en de vorige maand als haar factuur onder de vaste kost
+    # alleen ligt. Oudere maanden blijven altijd meetellen: wie ze zou
+    # weglaten omdat de factuur "te laag" lijkt, laat net de maanden met de
+    # laagste factuur vallen en trekt de variabele prijs kunstmatig omhoog.
+    vorige = (huidige[0], huidige[1] - 1) if huidige[1] > 1 else (huidige[0] - 1, 12)
+    onvolledig = set()
+    for m in maanden:
+        sleutel = (m["jaar"], m["maand"])
+        vk = vaste_kost(m["jaar"])
+        if sleutel == huidige:
+            onvolledig.add(sleutel)
+        elif sleutel == vorige and m["eur"] is not None and m["afname"] and vk is not None \
+                and m["eur"] < vk * uren(m["jaar"], m["maand"]):
+            onvolledig.add(sleutel)
+
+    # (jaar, maand) -> waarde, enkel maanden met echte data (> 0).
+    per_maand = {
+        "afname": {(m["jaar"], m["maand"]): m["afname"] for m in maanden
+                   if m["afname"] and m["afname"] > 0 and (m["jaar"], m["maand"]) not in onvolledig},
+        "gas_kwh": {(m["jaar"], m["maand"]): m["gas_kwh"] for m in maanden
+                    if m["gas_kwh"] and m["gas_kwh"] > 0 and (m["jaar"], m["maand"]) != huidige},
+        "gas_m3": {(m["jaar"], m["maand"]): m["gas_m3"] for m in maanden
+                   if m["gas_m3"] and m["gas_m3"] > 0 and (m["jaar"], m["maand"]) != huidige},
+    }
+
+    def verschil_zelfde_maanden(veld, jaar):
+        """Dit jaar min vorig jaar, enkel over de maanden die in beide jaren
+        data hebben — zo vergelijkt een lopend jaar niet met een vol jaar."""
+        nu = {mnd: w for (j, mnd), w in per_maand[veld].items() if j == jaar}
+        vorig = {mnd: w for (j, mnd), w in per_maand[veld].items() if j == jaar - 1}
+        gemeenschappelijk = nu.keys() & vorig.keys()
+        if not gemeenschappelijk:
+            return None
+        return sum(nu[x] for x in gemeenschappelijk) - sum(vorig[x] for x in gemeenschappelijk)
+
+    for jaar, c in componenten.items():
+        vk = vaste_kost(jaar)
+        som_factuur = som_vast = som_kwh = 0.0
+        gebruikt, uitgesloten = 0, []
+        for m in maanden:
+            if m["jaar"] != jaar or not m["afname"] or m["afname"] <= 0 or m["eur"] is None:
+                continue
+            if (jaar, m["maand"]) in onvolledig:
+                uitgesloten.append(m["maand"])
+                continue
+            som_factuur += m["eur"]
+            som_kwh += m["afname"]
+            gebruikt += 1
+            if vk is not None:
+                som_vast += vk * uren(jaar, m["maand"])
+        var = None
+        if vk is not None and som_kwh > 0 and som_factuur - som_vast > 0:
+            var = (som_factuur - som_vast) / som_kwh
+        c["vaste_kost_uur"] = vk
+        c["var_prijs"] = var
+        c["var_maanden"] = gebruikt
+        c["var_uitgesloten"] = uitgesloten
+        c["verschil_afname"] = verschil_zelfde_maanden("afname", jaar)
+        c["verschil_gas_kwh"] = verschil_zelfde_maanden("gas_kwh", jaar)
+        c["verschil_gas_m3"] = verschil_zelfde_maanden("gas_m3", jaar)
+
     return maand_counts, componenten
 
 
 def _bereken_jaaroverzicht(jaar, componenten):
-    """Berekent alle auto-afleidbare jaaroverzicht-velden voor één jaar
-    (dit jaar t.o.v. vorig jaar waar relevant). Retourneert een dict met
-    enkel de velden waarvoor een berekening mogelijk is (anders None)."""
+    """Berekent alle auto-afleidbare jaaroverzicht-velden voor één jaar.
+    Retourneert een dict met enkel de velden waarvoor een berekening
+    mogelijk is (anders None)."""
     huidig = componenten.get(jaar, {})
-    vorig = componenten.get(jaar - 1, {})
-
-    def verschil(veld):
-        h, v = huidig.get(veld), vorig.get(veld)
-        return h - v if h is not None and v is not None else None
 
     injectie = huidig.get("injectie_eur")
     opladen_zon_kost_eur = abs(injectie) if injectie is not None else None
-    opladen_zon_kwh = huidig.get("export")
-
-    # Uitgespaard met zonnepanelen = (jaarprijs afname × jaarlijks
-    # zelfverbruik) + (jaarprijs injectie × jaarlijkse export). Zelfde
-    # opbouw als de Excel-formule, maar met de prijzen van het JUISTE
-    # jaar — in de Excel bleek dit voor 2026 door een sleepfout de
-    # prijzen van 2025 te gebruiken voor 11 van de 12 maanden.
-    uitgespaard = None
-    afname_kwh, afname_eur = huidig.get("afname"), huidig.get("afname_eur")
+    var = huidig.get("var_prijs")
     zon, export = huidig.get("zon"), huidig.get("export")
-    if None not in (afname_kwh, afname_eur, zon, export) and afname_kwh and export:
-        prijs_afname = afname_eur / afname_kwh
-        prijs_injectie = (
-            opladen_zon_kost_eur / opladen_zon_kwh
-            if opladen_zon_kwh and opladen_zon_kost_eur is not None
-            else 0
-        )
-        zelfverbruik = zon - export
-        uitgespaard = prijs_afname * zelfverbruik + prijs_injectie * export
+    ontladen = huidig.get("batterij_ontladen")
+
+    # Uitgespaard met zonnepanelen = variabele prijs × zelfverbruik + wat de
+    # injectie opbrengt. Enkel de VARIABELE prijs: de vaste kost betaal je
+    # ook zonder panelen niet minder, dus die hoort niet in de besparing.
+    uitgespaard = None
+    if var is not None and zon is not None and export is not None:
+        uitgespaard = var * (zon - export) + (opladen_zon_kost_eur or 0)
+
+    # Batterij: ontladen kWh vermijdt aankoop aan de variabele prijs.
+    batterij_eur = var * ontladen if var is not None and ontladen is not None else None
 
     return {
         "jaarverbruik_elektriciteit_kwh": huidig.get("afname"),
         "jaarverbruik_elektriciteit_kost_eur": huidig.get("afname_eur"),
-        "batterij_gebruik_kwh": huidig.get("batterij_ontladen"),
+        "batterij_gebruik_kwh": ontladen,
         "batterij_laden_kwh": huidig.get("batterij_laden"),
+        "batterij_gebruik_kost_eur": batterij_eur,
         # "Opladen zon" blijkt zon-export te zijn (export naar het net),
         # geen batterijlading — geverifieerd tegen totaal_export/
         # engie_injectie_eur.
-        "opladen_zon_kwh": opladen_zon_kwh,
+        "opladen_zon_kwh": export,
         "opladen_zon_kost_eur": opladen_zon_kost_eur,
         "uitgespaard_zonnepanelen_eur": uitgespaard,
-        "verschil_elektriciteit_vorig_jaar_kwh": verschil("afname"),
-        "verschil_gas_vorig_jaar_kwh": verschil("gas_kwh"),
-        "verschil_gas_vorig_jaar_m3": verschil("gas_m3"),
+        "verschil_elektriciteit_vorig_jaar_kwh": huidig.get("verschil_afname"),
+        "verschil_gas_vorig_jaar_kwh": huidig.get("verschil_gas_kwh"),
+        "verschil_gas_vorig_jaar_m3": huidig.get("verschil_gas_m3"),
     }
 
 
@@ -379,6 +475,21 @@ def jaaroverzicht():
         rec["gem_maand_zon"] = jaaroverzicht_gem_per_maand(
             rec.get("opladen_zon_kost_eur"), n_maanden
         )
+
+        c = componenten.get(jaar, {})
+        rec["var_prijs"] = c.get("var_prijs")
+        vk = c.get("vaste_kost_uur")
+        if c.get("var_prijs") is not None:
+            tip = (f"Vaste kost {vk:.3f} €/uur (≈ {vk * 24 * 365 / 12:.1f} €/maand); "
+                   f"{c['var_maanden']} maanden gebruikt")
+            if c["var_uitgesloten"]:
+                tip += "; niet meegeteld (onvolledig): " + ", ".join(
+                    MAANDNAMEN[m] for m in c["var_uitgesloten"])
+        elif vk is None:
+            tip = "Geen vaste kost ingesteld voor dit jaar (zie 'bewerk')"
+        else:
+            tip = "Geen volledige maanden met factuur om de variabele prijs uit af te leiden"
+        rec["var_tooltip"] = tip
 
         resultaten.append(rec)
 
@@ -437,6 +548,7 @@ def jaaroverzicht_invoer(woning=None, jaar=None):
     if woning and jaar:
         _, componenten = _jaartotalen_componenten(woning)
         berekend = _bereken_jaaroverzicht(jaar, componenten)
+        berekend["vaste_kost_uur"] = _vaste_kost_resolver(woning)(jaar - 1)
 
     return render_template(
         "jaaroverzicht_invoer.html",
@@ -465,6 +577,7 @@ def herstel_seed():
             if huidige_path.exists():
                 shutil.copy2(huidige_path, backup)
             shutil.copy2(seed_path, huidige_path)
+            init_db()  # schema-migraties toepassen op de teruggezette databank
             flash(
                 f"Meegeleverde data hersteld. Vorige inhoud staat als backup in {backup.name}."
             )

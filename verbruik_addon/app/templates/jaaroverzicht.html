@@ -22,6 +22,7 @@
             <th>Elek. kWh</th>
             <th>Elek. €</th>
             <th>Elek. €/maand</th>
+            <th>Var. €/kWh</th>
             <th>Δ elek vs -1j</th>
             <th class="grp">Zonopbrengst (kWh)</th>
             <th>Zon export (kWh)</th>
@@ -53,6 +54,7 @@
                 {% if r._jaarverbruik_elektriciteit_kost_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
             <td>{{ "%.2f"|format(r.gem_maand_elektriciteit) if r.gem_maand_elektriciteit is not none else "–" }}</td>
+            <td title="{{ r.var_tooltip }}">{{ "%.3f"|format(r.var_prijs) if r.var_prijs is not none else "–" }}</td>
             <td>
                 {{ "%.2f kWh"|format(r.verschil_elektriciteit_vorig_jaar_kwh) if r.verschil_elektriciteit_vorig_jaar_kwh is not none else "–" }}
                 {% if r._verschil_elektriciteit_vorig_jaar_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
@@ -64,7 +66,7 @@
             </td>
             <td>{{ "%.2f"|format(r.zelfverbruik_kwh_berekend) if r.zelfverbruik_kwh_berekend is not none else "–" }}</td>
             <td>{{ "%.1f"|format(r.zelfverbruik_pct_berekend) ~ "%" if r.zelfverbruik_pct_berekend is not none else "–" }}</td>
-            <td>
+            <td{% if r.uitgespaard_excel_eur is not none %} title="Excel (oude berekening, vaste kost inbegrepen): {{ '%.2f'|format(r.uitgespaard_excel_eur) }} €"{% endif %}>
                 {{ "%.2f"|format(r.uitgespaard_zonnepanelen_eur) if r.uitgespaard_zonnepanelen_eur is not none else "–" }}
                 {% if r._uitgespaard_zonnepanelen_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
@@ -74,7 +76,10 @@
                 {{ "%.2f"|format(r.batterij_gebruik_kwh) if r.batterij_gebruik_kwh is not none else "–" }}
                 {% if r._batterij_gebruik_kwh_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
-            <td>{{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}</td>
+            <td{% if r.batterij_gebruik_kost_excel_eur is not none %} title="Excel (oude berekening): {{ '%.2f'|format(r.batterij_gebruik_kost_excel_eur) }} €"{% endif %}>
+                {{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}
+                {% if r._batterij_gebruik_kost_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
+            </td>
             {% if heeft_gas %}
             <td class="grp">{{ "%.2f"|format(r.jaarverbruik_gas) ~ " " ~ (r.jaarverbruik_gas_eenheid or "") if r.jaarverbruik_gas is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.jaarverbruik_gas_m3_berekend) if r.jaarverbruik_gas_m3_berekend is not none else "–" }}</td>

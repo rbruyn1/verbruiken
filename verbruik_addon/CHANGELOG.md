@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0
+- Uitgespaard en Batterij € rekenen nu met de VARIABELE energieprijs i.p.v.
+  de bruto gemiddelde prijs (waar de vaste kost in zat, wat de besparing
+  overschatte). Variabele prijs = (jaarfactuur - vaste kost) / kWh afname.
+  Uitgespaard = variabele prijs x zelfverbruik + injectie-opbrengst;
+  Batterij € = variabele prijs x ontladen kWh.
+- Nieuw veld "Vaste kost (€/uur)" per woning en per jaar in het
+  jaarformulier (leeg = waarde van vorig jaar). Startwaarden: Tienen 0,03
+  en Binkom 0,05 €/uur, de vaste bijdrage die de Engie-app aanrekent.
+- Nieuwe kolom "Var. €/kWh" in het jaaroverzicht (tooltip: vaste kost,
+  gebruikte en niet-meegetelde maanden).
+- De lopende maand en een onvolledige vorige maand (factuur lager dan de
+  vaste kost alleen: Engie loopt achter) tellen niet mee voor de prijs.
+  Oudere maanden tellen altijd mee, anders ontstaat een vertekening naar
+  boven.
+- Eenmalige migratie (PRAGMA user_version): de oude Excel-bedragen voor
+  uitgespaard en batterij € zijn verplaatst naar aparte kolommen (zichtbaar
+  als tooltip in de tabel) zodat de nieuwe berekening het overneemt; niets
+  gaat verloren en manuele invoer heeft weer voorrang.
+- "Δ elek/gas vs -1j" in het jaaroverzicht vergelijkt nu enkel de maanden
+  die in beide jaren data hebben (lopend jaar t.o.v. dezelfde maanden vorig
+  jaar), i.p.v. met een vol jaar.
+- Fix: maanden zonder bedrag toonden "€/kWh 0.000" i.p.v. "-"; Δ gas/elek
+  toonde het volledige verbruik als de maand vorig jaar leeg was.
+- Fix: "Data herstellen" past nu ook de schema-migraties toe.
+
 ## 0.2.23
 - Jaaroverzicht: kolom "Zelfverbr. %" (zelfverbruik / zonopbrengst)
   toegevoegd, naast het zelfverbruik in kWh.

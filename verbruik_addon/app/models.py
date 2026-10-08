@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS jaaroverzicht (
     batterij_gebruik_kwh REAL,
     batterij_laden_kwh REAL,
     batterij_gebruik_kost_eur REAL,
+    vaste_kost_uur REAL,
+    uitgespaard_excel_eur REAL,
+    batterij_gebruik_kost_excel_eur REAL,
 
     verschil_gas_vorig_jaar_m3 REAL,
     verschil_gas_vorig_jaar_kwh REAL,
@@ -76,19 +79,61 @@ def get_connection():
     return conn
 
 
+NIEUWE_JAAR_KOLOMMEN = {
+    "batterij_laden_kwh": "REAL",
+    "vaste_kost_uur": "REAL",
+    "uitgespaard_excel_eur": "REAL",
+    "batterij_gebruik_kost_excel_eur": "REAL",
+}
+
+# Vaste bijdrage die de Engie-app aanrekent (€ per uur, ook bij 0 kWh afname).
+STANDAARD_VASTE_KOST_UUR = {"Tienen": 0.03, "Binkom": 0.05}
+
+
 def _ensure_columns(conn):
     """Lichte schema-migratie: voegt kolommen toe die in SCHEMA staan maar
     nog niet in een bestaande (al-gemigreerde) databank zitten. SQLite's
     CREATE TABLE IF NOT EXISTS raakt een reeds bestaande tabel niet aan."""
     bestaand = {row[1] for row in conn.execute("PRAGMA table_info(jaaroverzicht)")}
-    if "batterij_laden_kwh" not in bestaand:
-        conn.execute("ALTER TABLE jaaroverzicht ADD COLUMN batterij_laden_kwh REAL")
+    for kolom, type_ in NIEUWE_JAAR_KOLOMMEN.items():
+        if kolom not in bestaand:
+            conn.execute(f"ALTER TABLE jaaroverzicht ADD COLUMN {kolom} {type_}")
+
+
+def _migratie_v1(conn):
+    """Eenmalig (PRAGMA user_version): de variabele-prijsberekening vervangt
+    de oude Excel-bedragen voor 'uitgespaard' en 'batterij €' (die rekenden
+    met de bruto prijs, vaste kosten inbegrepen). De oude bedragen blijven
+    bewaard in aparte kolommen; de hoofdkolommen worden leeg zodat de nieuwe
+    berekening het overneemt. Daarna zijn manuele invoeren weer gewoon
+    voorrangswaarden. De vaste kost wordt enkel ingevuld waar nog leeg."""
+    if conn.execute("PRAGMA user_version").fetchone()[0] >= 1:
+        return
+    conn.execute(
+        """UPDATE jaaroverzicht
+           SET uitgespaard_excel_eur = uitgespaard_zonnepanelen_eur,
+               uitgespaard_zonnepanelen_eur = NULL
+           WHERE uitgespaard_zonnepanelen_eur IS NOT NULL AND uitgespaard_excel_eur IS NULL"""
+    )
+    conn.execute(
+        """UPDATE jaaroverzicht
+           SET batterij_gebruik_kost_excel_eur = batterij_gebruik_kost_eur,
+               batterij_gebruik_kost_eur = NULL
+           WHERE batterij_gebruik_kost_eur IS NOT NULL AND batterij_gebruik_kost_excel_eur IS NULL"""
+    )
+    for woning, tarief in STANDAARD_VASTE_KOST_UUR.items():
+        conn.execute(
+            "UPDATE jaaroverzicht SET vaste_kost_uur = ? WHERE woning = ? AND vaste_kost_uur IS NULL",
+            (tarief, woning),
+        )
+    conn.execute("PRAGMA user_version = 1")
 
 
 def init_db():
     conn = get_connection()
     conn.executescript(SCHEMA)
     _ensure_columns(conn)
+    _migratie_v1(conn)
     conn.commit()
     conn.close()
 
