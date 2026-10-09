@@ -479,6 +479,10 @@ def jaaroverzicht():
         c = componenten.get(jaar, {})
         rec["var_prijs"] = c.get("var_prijs")
         vk = c.get("vaste_kost_uur")
+        # Vaste kost zoals ze voor dat jaar geldt (eigen waarde of geërfd).
+        eigen = rec.get("vaste_kost_uur")
+        rec["vaste_kost_getoond"] = eigen if eigen is not None else vk
+        rec["vaste_kost_geerfd"] = eigen is None and vk is not None
         if c.get("var_prijs") is not None:
             tip = (f"Vaste kost {vk:.3f} €/uur (≈ {vk * 24 * 365 / 12:.1f} €/maand); "
                    f"{c['var_maanden']} maanden gebruikt")

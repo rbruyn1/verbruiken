@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+- Jaaroverzicht: kolom "Vaste kost (€/u)" naast "Var. €/kWh", zodat je per
+  jaar in één oogopslag ziet welke vaste kost gebruikt wordt. Een `*` betekent
+  dat het jaar geen eigen waarde heeft en die van een eerder jaar overneemt.
+  Aanpassen kan via "bewerk" bij het jaar.
+
 ## 0.3.0
 - Uitgespaard en Batterij € rekenen nu met de VARIABELE energieprijs i.p.v.
   de bruto gemiddelde prijs (waar de vaste kost in zat, wat de besparing
