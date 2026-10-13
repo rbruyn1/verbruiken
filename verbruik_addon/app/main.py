@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from pathlib import Path
 import calendar
 import os
@@ -421,6 +421,27 @@ def _bereken_jaaroverzicht(jaar, componenten):
         "verschil_gas_vorig_jaar_kwh": huidig.get("verschil_gas_kwh"),
         "verschil_gas_vorig_jaar_m3": huidig.get("verschil_gas_m3"),
     }
+
+
+@app.route("/invoer/<woning>/<int:jaar>/<int:maand>/verwijder", methods=["POST"])
+def verwijder_maand(woning, jaar, maand):
+    """Verwijdert één maand. Enkel via POST (nooit via een gewone link) en
+    in de browser pas na een bevestiging."""
+    if woning not in WONINGEN or not 1 <= maand <= 12:
+        abort(404)
+    conn = get_connection()
+    cur = conn.execute(
+        "DELETE FROM maandverbruik WHERE woning=? AND jaar=? AND maand=?",
+        (woning, jaar, maand),
+    )
+    conn.commit()
+    verwijderd = cur.rowcount
+    conn.close()
+    if verwijderd:
+        flash(f"{MAANDNAMEN[maand]} {jaar} voor {woning} is verwijderd.")
+    else:
+        flash(f"{MAANDNAMEN[maand]} {jaar} voor {woning} bestond niet (meer).")
+    return redirect(url_for("index", woning=woning))
 
 
 @app.route("/jaaroverzicht")

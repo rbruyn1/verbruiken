@@ -40,6 +40,14 @@
     </p>
 </form>
 
+{% if bestaand %}
+<form method="post" class="verwijder"
+      action="{{ url_for('verwijder_maand', woning=bestaand.woning, jaar=bestaand.jaar, maand=bestaand.maand) }}"
+      onsubmit="return confirm('Maand {{ bestaand.maand }}/{{ bestaand.jaar }} van {{ bestaand.woning }} definitief verwijderen? Dit kan niet ongedaan gemaakt worden.');">
+    <button type="submit" class="danger">Verwijder deze maand</button>
+</form>
+{% endif %}
+
 <script>
 // Auto-berekening totaal afname/export = piek + dal, zolang het
 // doelveld niet handmatig door de gebruiker is aangepast. Zodra iemand

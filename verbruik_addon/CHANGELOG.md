@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+- Een maand kan nu verwijderd worden: knop "Verwijder deze maand" op de
+  bewerkpagina van een bestaande maand, met een bevestigingsvraag. Het
+  verwijderen gebeurt enkel via een formulier (POST), nooit via een gewone
+  link, en kan niet ongedaan gemaakt worden.
+
 ## 0.3.1
 - Jaaroverzicht: kolom "Vaste kost (€/u)" naast "Var. €/kWh", zodat je per
   jaar in één oogopslag ziet welke vaste kost gebruikt wordt. Een `*` betekent
