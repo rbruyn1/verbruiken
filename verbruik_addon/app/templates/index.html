@@ -57,6 +57,7 @@ const dal = {{ dal | tojson }};
 const gas = {{ gas | tojson }};
 const zelfverbruik = {{ zelfverbruik | tojson }};
 const water = {{ water | tojson }};
+const jaarWater = {{ jaar_water | tojson }};
 const heeftWater = {{ heeft_water | tojson }};
 const verschilElek = {{ verschil_elek | tojson }};
 const verschilGas = {{ verschil_gas | tojson }};
@@ -128,17 +129,31 @@ new Chart(document.getElementById("verschilChart"), {
     }
 });
 
+const jaarSchalen = { y: { beginAtZero: true, title: { display: true, text: "kWh" } } };
+if (heeftWater) {
+    jaarSchalen.y2 = {
+        position: "right",
+        beginAtZero: true,
+        grid: { drawOnChartArea: false },
+        title: { display: true, text: "Water (m³)", color: KLEUR.water },
+        ticks: { color: KLEUR.water }
+    };
+}
 new Chart(document.getElementById("jaartotalenChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
         { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: KLEUR.elek },
         ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: KLEUR.gas }] : []),
-        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: KLEUR.zon }
+        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: KLEUR.zon },
+        ...(heeftWater ? [{ type: "line", label: "Water (m³, rechteras)", data: jaarWater, yAxisID: "y2",
+                            borderColor: KLEUR.water, backgroundColor: KLEUR.water,
+                            borderWidth: 2, pointRadius: 4, tension: 0.15 }] : [])
     ]},
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } }
+        plugins: { title: { display: true, text: "Jaartotalen", color: "#1c1f24", font: { size: 16 } } },
+        scales: jaarSchalen
     }
 });
 

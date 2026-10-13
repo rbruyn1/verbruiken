@@ -173,7 +173,8 @@ def _jaartotalen(woning):
                   SUM(dal_verbruik) as dal,
                   SUM(gas_kwh) as gas,
                   SUM(zonopbrengst_totaal) as zon,
-                  SUM(totaal_export) as export
+                  SUM(totaal_export) as export,
+                  SUM(water_l) as water
            FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
         (woning,),
     ).fetchall()
@@ -185,6 +186,8 @@ def _jaartotalen(woning):
         "jaar_zon": [r["zon"] for r in rows],
         "jaar_piek": [r["piek"] for r in rows],
         "jaar_dal": [r["dal"] for r in rows],
+        # Water in m³; 0 betekent "niet bijgehouden", dus een gat i.p.v. een nulpunt.
+        "jaar_water": [round(r["water"] / 1000, 2) if r["water"] else None for r in rows],
         "jaar_zelfverbruik": [
             (r["zon"] - (r["export"] or 0)) if r["zon"] is not None else None for r in rows
         ],

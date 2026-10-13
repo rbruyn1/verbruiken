@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5
+- Grafiek "Jaartotalen": waterverbruik per jaar toegevoegd als lijn in m³
+  op een tweede Y-as (rechts, in de kleur van water), zodat het naast de
+  kWh-staven leesbaar blijft. Jaren zonder bijgehouden water (0 of leeg)
+  tonen een gat i.p.v. een nulpunt. De gestapelde energiegrafiek blijft
+  zonder water, want dat is geen energie.
+
 ## 0.3.4
 - Nieuwe grafiek "Waterverbruik (liter per maand)" onderaan de hoofdpagina,
   met een eigen kleur (lichtblauw) in het centrale kleurenpalet. De grafiek
