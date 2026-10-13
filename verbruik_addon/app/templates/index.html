@@ -34,6 +34,11 @@
     <div class="chart-card">
         <canvas id="totaalEnergieChart"></canvas>
     </div>
+    {% if heeft_water %}
+    <div class="chart-card">
+        <canvas id="waterChart"></canvas>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -51,6 +56,8 @@ const piek = {{ piek | tojson }};
 const dal = {{ dal | tojson }};
 const gas = {{ gas | tojson }};
 const zelfverbruik = {{ zelfverbruik | tojson }};
+const water = {{ water | tojson }};
+const heeftWater = {{ heeft_water | tojson }};
 const verschilElek = {{ verschil_elek | tojson }};
 const verschilGas = {{ verschil_gas | tojson }};
 const heeftGas = {{ heeft_gas | tojson }};
@@ -74,7 +81,8 @@ const KLEUR = {
     zelf: "#2e9e52",
     zon:  "#17a2b8",
     gas:  "#8e44ad",
-    elek: "#3576c9"
+    elek: "#3576c9",
+    water: "#4fb3e8"
 };
 
 if (heeftGas) {
@@ -165,5 +173,20 @@ new Chart(document.getElementById("totaalEnergieChart"), {
         scales: { x: { stacked: true, ticks: { maxRotation: 90, minRotation: 90 } }, y: { stacked: true } }
     }
 });
+
+if (heeftWater) {
+    new Chart(document.getElementById("waterChart"), {
+        type: "bar",
+        data: { labels: labels, datasets: [
+            { label: "Water (liter)", data: water, backgroundColor: KLEUR.water }
+        ]},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { title: { display: true, text: "Waterverbruik (liter per maand)", color: "#1c1f24", font: { size: 16 } } },
+            scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
+        }
+    });
+}
 </script>
 {% endblock %}

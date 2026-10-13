@@ -124,6 +124,7 @@ def index():
     piek, dal = [], []
     gas = []
     zelfverbruik = []
+    water = []
     verschil_elek, verschil_gas = [], []
     heeft_gas = _heeft_gas(woning)
 
@@ -132,6 +133,7 @@ def index():
         piek.append(r.get("piek_verbruik"))
         dal.append(r.get("dal_verbruik"))
         gas.append(r.get("gas_kwh"))
+        water.append(r.get("water_l"))
         if r.get("zonopbrengst_totaal") is not None:
             zelfverbruik.append(r["zonopbrengst_totaal"] - (r.get("totaal_export") or 0))
         else:
@@ -152,6 +154,8 @@ def index():
         dal=dal,
         gas=gas,
         zelfverbruik=zelfverbruik,
+        water=water,
+        heeft_water=any(v for v in water),
         verschil_elek=verschil_elek,
         verschil_gas=verschil_gas,
         maandrecords=_enriched_records(woning),

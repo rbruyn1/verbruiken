@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+- Nieuwe grafiek "Waterverbruik (liter per maand)" onderaan de hoofdpagina,
+  met een eigen kleur (lichtblauw) in het centrale kleurenpalet. De grafiek
+  wordt enkel getoond voor woningen met waterdata.
+
 ## 0.3.3
 - Waterverbruik toegevoegd aan de tabellen: "Water (l)" per maand in het
   maandoverzicht en "Water (m³)" als jaartotaal in het jaaroverzicht
