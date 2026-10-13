@@ -298,7 +298,8 @@ def _jaartotalen_componenten(woning):
                   SUM(batterij_laden) as batterij_laden,
                   SUM(totaal_export) as export,
                   SUM(engie_injectie_eur) as injectie_eur,
-                  SUM(zonopbrengst_totaal) as zon
+                  SUM(zonopbrengst_totaal) as zon,
+                  SUM(water_l) as water
            FROM maandverbruik WHERE woning=? GROUP BY jaar""",
         (woning,),
     ):
@@ -482,6 +483,9 @@ def jaaroverzicht():
         )
         # Totale zonopbrengst van het jaar (som van de maanden); puur informatief.
         rec["zonopbrengst_kwh_berekend"] = zon_j
+        # Waterverbruik van het jaar in m³ (maandinvoer is in liter).
+        water_l = componenten.get(jaar, {}).get("water")
+        rec["water_m3_berekend"] = water_l / 1000 if water_l is not None else None
         rec["zelfverbruik_pct_berekend"] = (
             (zon_j - (export_j or 0)) / zon_j * 100 if zon_j else None
         )

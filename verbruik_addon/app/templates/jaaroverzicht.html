@@ -32,6 +32,7 @@
             <th>Uitgespaard €</th>
             <th class="grp">Batterij laden/ontladen (kWh)</th>
             <th>Batterij €</th>
+            <th class="grp">Water (m³)</th>
             {% if heeft_gas %}
             <th class="grp">Gas</th>
             <th>Gas (m³)</th>
@@ -83,6 +84,7 @@
                 {{ "%.2f"|format(r.batterij_gebruik_kost_eur) if r.batterij_gebruik_kost_eur is not none else "–" }}
                 {% if r._batterij_gebruik_kost_eur_berekend %}<span class="muted" title="Automatisch berekend uit de maandelijkse invoer">*</span>{% endif %}
             </td>
+            <td class="grp">{{ "%.2f"|format(r.water_m3_berekend) if r.water_m3_berekend is not none else "–" }}</td>
             {% if heeft_gas %}
             <td class="grp">{{ "%.2f"|format(r.jaarverbruik_gas) ~ " " ~ (r.jaarverbruik_gas_eenheid or "") if r.jaarverbruik_gas is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.jaarverbruik_gas_m3_berekend) if r.jaarverbruik_gas_m3_berekend is not none else "–" }}</td>

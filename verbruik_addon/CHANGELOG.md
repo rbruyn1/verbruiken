@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+- Waterverbruik toegevoegd aan de tabellen: "Water (l)" per maand in het
+  maandoverzicht en "Water (m³)" als jaartotaal in het jaaroverzicht
+  (som van de maanden). Water staat als eigen blok voor het gasblok en is
+  dus ook voor Binkom zichtbaar.
+
 ## 0.3.2
 - Een maand kan nu verwijderd worden: knop "Verwijder deze maand" op de
   bewerkpagina van een bestaande maand, met een bevestigingsvraag. Het

@@ -13,6 +13,7 @@
             <th class="grp">€/kWh afn.</th>
             <th>€/kWh inj.</th>
             <th>Δ elek. vs -1j</th>
+            <th class="grp">Water (l)</th>
             {% if heeft_gas %}
             <th class="grp">Gas m³</th>
             <th>Gas kWh</th>
@@ -37,6 +38,7 @@
             <td class="{{ 'neg' if r.verschil_vorig_jaar_elektriciteit and r.verschil_vorig_jaar_elektriciteit > 0 else 'pos' if r.verschil_vorig_jaar_elektriciteit else '' }}">
                 {{ "%+.2f"|format(r.verschil_vorig_jaar_elektriciteit) if r.verschil_vorig_jaar_elektriciteit is not none else "–" }}
             </td>
+            <td class="grp">{{ "%.0f"|format(r.water_l) if r.water_l is not none else "–" }}</td>
             {% if heeft_gas %}
             <td class="grp">{{ "%.2f"|format(r.gas_m3) if r.gas_m3 is not none else "–" }}</td>
             <td>{{ "%.2f"|format(r.gas_kwh) if r.gas_kwh is not none else "–" }}</td>
