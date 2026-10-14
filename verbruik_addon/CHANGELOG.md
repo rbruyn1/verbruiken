@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7
+- Nieuwe grafiek "Zonopbrengst (kWh per maand)". De grafiek begint bij de
+  eerste maand met een echte opbrengst en eindigt bij de laatste (Tienen
+  vanaf jan-23, Binkom vanaf aug-26), zodat er geen lege voorloop is.
+  Woningen zonder zondata tonen de grafiek niet.
+
 ## 0.3.6
 - Grafiek "Jaartotalen": de waterlijn wordt nu als laatste getekend en ligt
   dus boven de staven (was erachter verborgen).

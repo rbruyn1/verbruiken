@@ -34,6 +34,11 @@
     <div class="chart-card">
         <canvas id="totaalEnergieChart"></canvas>
     </div>
+    {% if heeft_zon %}
+    <div class="chart-card">
+        <canvas id="zonChart"></canvas>
+    </div>
+    {% endif %}
     {% if heeft_water %}
     <div class="chart-card">
         <canvas id="waterChart"></canvas>
@@ -57,6 +62,9 @@ const dal = {{ dal | tojson }};
 const gas = {{ gas | tojson }};
 const zelfverbruik = {{ zelfverbruik | tojson }};
 const water = {{ water | tojson }};
+const zonLabels = {{ zon_labels | tojson }};
+const zonWaarden = {{ zon_waarden | tojson }};
+const heeftZon = {{ heeft_zon | tojson }};
 const jaarWater = {{ jaar_water | tojson }};
 const heeftWater = {{ heeft_water | tojson }};
 const verschilElek = {{ verschil_elek | tojson }};
@@ -198,6 +206,21 @@ new Chart(document.getElementById("totaalEnergieChart"), {
         scales: { x: { stacked: true, ticks: { maxRotation: 90, minRotation: 90 } }, y: { stacked: true } }
     }
 });
+
+if (heeftZon) {
+    new Chart(document.getElementById("zonChart"), {
+        type: "bar",
+        data: { labels: zonLabels, datasets: [
+            { label: "Zonopbrengst (kWh)", data: zonWaarden, backgroundColor: KLEUR.zon }
+        ]},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { title: { display: true, text: "Zonopbrengst (kWh per maand)", color: "#1c1f24", font: { size: 16 } } },
+            scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } }, y: { beginAtZero: true } }
+        }
+    });
+}
 
 if (heeftWater) {
     new Chart(document.getElementById("waterChart"), {

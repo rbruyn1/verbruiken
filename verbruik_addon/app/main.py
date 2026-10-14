@@ -144,6 +144,16 @@ def index():
         verschil_elek.append(enriched.get("verschil_vorig_jaar_elektriciteit"))
         verschil_gas.append(enriched.get("verschil_vorig_jaar_gas"))
 
+    # Zonopbrengst: de grafiek loopt van de eerste tot de laatste maand met
+    # een echte opbrengst (> 0); daarvoor staat er niets of 0 in de data.
+    zon_reeks = [r.get("zonopbrengst_totaal") for r in records]
+    met_zon = [i for i, v in enumerate(zon_reeks) if v]
+    if met_zon:
+        a, b = met_zon[0], met_zon[-1] + 1
+        zon_labels, zon_waarden = labels[a:b], zon_reeks[a:b]
+    else:
+        zon_labels, zon_waarden = [], []
+
     return render_template(
         "index.html",
         woningen=WONINGEN,
@@ -155,6 +165,9 @@ def index():
         gas=gas,
         zelfverbruik=zelfverbruik,
         water=water,
+        zon_labels=zon_labels,
+        zon_waarden=zon_waarden,
+        heeft_zon=bool(met_zon),
         heeft_water=any(v for v in water),
         verschil_elek=verschil_elek,
         verschil_gas=verschil_gas,
