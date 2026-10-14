@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6
+- Grafiek "Jaartotalen": de waterlijn wordt nu als laatste getekend en ligt
+  dus boven de staven (was erachter verborgen).
+- Grafiek "verschil -1 jaar": 0 ligt altijd binnen de as, met een dikke
+  donkere nullijn (3px) zodat je meteen ziet of het meer of minder verbruik
+  is dan vorig jaar.
+
 ## 0.3.5
 - Grafiek "Jaartotalen": waterverbruik per jaar toegevoegd als lijn in m³
   op een tweede Y-as (rechts, in de kleur van water), zodat het naast de

@@ -125,7 +125,17 @@ new Chart(document.getElementById("verschilChart"), {
         responsive: true,
             maintainAspectRatio: false,
         plugins: { title: { display: true, text: "verschil -1 jaar (negatief is minder verbruikt)", color: "#1c1f24", font: { size: 16 } } },
-        scales: { x: { ticks: { maxRotation: 90, minRotation: 90 } } }
+        scales: {
+            x: { ticks: { maxRotation: 90, minRotation: 90 } },
+            // 0 altijd in beeld, met een duidelijk dikkere nullijn
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: (ctx) => Math.abs(ctx.tick.value) < 1e-9 ? "#1c1f24" : "#e0e2e7",
+                    lineWidth: (ctx) => Math.abs(ctx.tick.value) < 1e-9 ? 3 : 1
+                }
+            }
+        }
     }
 });
 
@@ -142,10 +152,10 @@ if (heeftWater) {
 new Chart(document.getElementById("jaartotalenChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
-        { label: "Elektriciteit afname (kWh)", data: jaarElektriciteit, backgroundColor: KLEUR.elek },
-        ...(heeftGas ? [{ label: "Gas (kWh)", data: jaarGas, backgroundColor: KLEUR.gas }] : []),
-        { label: "Zonopbrengst (kWh)", data: jaarZon, backgroundColor: KLEUR.zon },
-        ...(heeftWater ? [{ type: "line", label: "Water (m³, rechteras)", data: jaarWater, yAxisID: "y2",
+        { label: "Elektriciteit afname (kWh)", order: 1, data: jaarElektriciteit, backgroundColor: KLEUR.elek },
+        ...(heeftGas ? [{ label: "Gas (kWh)", order: 1, data: jaarGas, backgroundColor: KLEUR.gas }] : []),
+        { label: "Zonopbrengst (kWh)", order: 1, data: jaarZon, backgroundColor: KLEUR.zon },
+        ...(heeftWater ? [{ type: "line", order: 0, label: "Water (m³, rechteras)", data: jaarWater, yAxisID: "y2",
                             borderColor: KLEUR.water, backgroundColor: KLEUR.water,
                             borderWidth: 2, pointRadius: 4, tension: 0.15 }] : [])
     ]},
