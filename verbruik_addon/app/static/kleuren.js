@@ -8,6 +8,7 @@ const KLEUR = {
     gas:  "#8e44ad",
     elek: "#3576c9",
     water: "#4fb3e8",
+    inj:  "#6cc7d9",   // injectie (naar het net gestuurde zonne-energie)
     // Kleuren per woning (enkel gebruikt bij "opdelen per woning" op de tab Totaal)
     woning: { Tienen: "#34495e", Binkom: "#e84393" }
 };

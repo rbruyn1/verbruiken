@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1
+- Tab Totaal: injectie (kWh die naar het net gaat) toegevoegd als extra soort,
+  met een eigen knop en kleur. Ze staat als negatieve staaf ONDER de nullijn,
+  zodat de staafhoogte boven nul het echte verbruik blijft (injectie is geen
+  verbruik). Bij "opdelen per woning" krijgt elke woning een verbruiksstaaf
+  boven en een doorzichtigere injectiestaaf onder de nullijn. De nullijn is
+  dik getekend.
+
 ## 0.4.0
 - Nieuwe tab "Totaal": de energie van alle woningen samen in twee gestapelde
   grafieken (per jaar en per maand) om de evolutie over de jaren te volgen.

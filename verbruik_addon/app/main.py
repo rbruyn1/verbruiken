@@ -662,13 +662,14 @@ def totaal():
     woningen = [w for w in WONINGEN if any(r["woning"] == w for r in rows)]
     sleutels = sorted({(r["jaar"], r["maand"]) for r in rows})
     index = {s: i for i, s in enumerate(sleutels)}
-    reeks = {w: {s: [None] * len(sleutels) for s in ("piek", "dal", "zelf", "gas")} for w in woningen}
+    reeks = {w: {s: [None] * len(sleutels) for s in ("piek", "dal", "zelf", "gas", "inj")} for w in woningen}
     for r in rows:
         i = index[(r["jaar"], r["maand"])]
         d = reeks[r["woning"]]
         d["piek"][i] = r["piek_verbruik"]
         d["dal"][i] = r["dal_verbruik"]
         d["gas"][i] = r["gas_kwh"]
+        d["inj"][i] = r["totaal_export"]   # kWh naar het net gestuurd
         if r["zonopbrengst_totaal"] is not None:
             # zelfverbruik zon = opbrengst min wat naar het net gaat
             d["zelf"][i] = r["zonopbrengst_totaal"] - (r["totaal_export"] or 0)

@@ -3,6 +3,7 @@
 {% block content %}
 <h1>Totaal — alle woningen samen</h1>
 <p class="subtitle">Energie van de woningen opgeteld, om de evolutie over de jaren te volgen.
+    Injectie (wat je naar het net stuurt) staat onder de nullijn, verbruik erboven.
     * = onvolledig jaar (niet alle 12 maanden in de data).</p>
 
 <div class="filters">
@@ -14,7 +15,7 @@
     </div>
     <div class="filter-groep">
         <span class="filter-label">Soort</span>
-        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas")] %}
+        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas"), ("inj", "Injectie")] %}
         <button type="button" class="chip actief" data-groep="soort" data-waarde="{{ id }}">{{ label }}</button>
         {% endfor %}
     </div>
@@ -44,7 +45,9 @@ const SOORTEN = [
     { id: "piek", label: "Piek verbruik (net)", kleur: KLEUR.piek },
     { id: "dal",  label: "Dal verbruik (net)",  kleur: KLEUR.dal },
     { id: "zelf", label: "Zelfverbruik zon",    kleur: KLEUR.zelf },
-    { id: "gas",  label: "Gas",                 kleur: KLEUR.gas }
+    { id: "gas",  label: "Gas",                 kleur: KLEUR.gas },
+    // Injectie is geen verbruik: ze staat onder de nullijn (negatieve staaf).
+    { id: "inj",  label: "Injectie (naar het net)", kleur: KLEUR.inj, negatief: true }
 ];
 const staat = {
     woning: new Set(DATA.woningen),
@@ -71,17 +74,29 @@ function som(groep, woningen, soorten) {
 function reeksen(groepen) {
     const woningen = DATA.woningen.filter(w => staat.woning.has(w));
     const soorten = SOORTEN.filter(s => staat.soort.has(s.id));
-    const soortIds = soorten.map(s => s.id);
+    const verbruik = soorten.filter(s => !s.negatief);
+    const heeftInjectie = soorten.some(s => s.negatief);
+    const teken = (v, negatief) => v === null ? null : (negatief ? -v : v);
     if (staat.opdeling === "soort") {
         return soorten.map(s => ({
             label: s.label, backgroundColor: s.kleur, stack: "energie",
-            data: groepen.map(g => som(g, woningen, [s.id]))
+            data: groepen.map(g => teken(som(g, woningen, [s.id]), s.negatief))
         }));
     }
-    return woningen.map(w => ({
+    // Per woning: het verbruik van elke woning boven de nullijn, haar injectie
+    // (zelfde kleur, doorzichtiger) eronder.
+    const verbruikIds = verbruik.map(s => s.id);
+    const sets = verbruikIds.length ? woningen.map(w => ({
         label: w, backgroundColor: KLEUR.woning[w], stack: "energie",
-        data: groepen.map(g => som(g, [w], soortIds))
-    }));
+        data: groepen.map(g => som(g, [w], verbruikIds))
+    })) : [];
+    if (heeftInjectie) {
+        woningen.forEach(w => sets.push({
+            label: w + " (injectie)", backgroundColor: KLEUR.woning[w] + "88", stack: "energie",
+            data: groepen.map(g => teken(som(g, [w], ["inj"]), true))
+        }));
+    }
+    return sets;
 }
 
 function opties(titel, draaiLabels) {
@@ -94,7 +109,14 @@ function opties(titel, draaiLabels) {
         },
         scales: {
             x: { stacked: true, ticks: draaiLabels ? { maxRotation: 90, minRotation: 90 } : {} },
-            y: { stacked: true, beginAtZero: true, title: { display: true, text: "kWh" } }
+            y: {
+                stacked: true, beginAtZero: true, title: { display: true, text: "kWh" },
+                // duidelijke nullijn: erboven verbruik, eronder injectie
+                grid: {
+                    color: (ctx) => Math.abs(ctx.tick.value) < 1e-9 ? "#1c1f24" : "#e0e2e7",
+                    lineWidth: (ctx) => Math.abs(ctx.tick.value) < 1e-9 ? 3 : 1
+                }
+            }
         }
     };
 }
