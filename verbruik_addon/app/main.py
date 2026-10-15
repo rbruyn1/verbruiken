@@ -647,6 +647,49 @@ def herstel_seed():
     )
 
 
+@app.route("/totaal")
+def totaal():
+    """Energie van alle woningen samen, om de evolutie over de jaren te volgen.
+    De filtering (woning, soort, indeling) en de optelling gebeuren in de browser."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT woning, jaar, maand, piek_verbruik, dal_verbruik,
+                  zonopbrengst_totaal, totaal_export, gas_kwh
+           FROM maandverbruik ORDER BY jaar, maand"""
+    ).fetchall()
+    conn.close()
+
+    woningen = [w for w in WONINGEN if any(r["woning"] == w for r in rows)]
+    sleutels = sorted({(r["jaar"], r["maand"]) for r in rows})
+    index = {s: i for i, s in enumerate(sleutels)}
+    reeks = {w: {s: [None] * len(sleutels) for s in ("piek", "dal", "zelf", "gas")} for w in woningen}
+    for r in rows:
+        i = index[(r["jaar"], r["maand"])]
+        d = reeks[r["woning"]]
+        d["piek"][i] = r["piek_verbruik"]
+        d["dal"][i] = r["dal_verbruik"]
+        d["gas"][i] = r["gas_kwh"]
+        if r["zonopbrengst_totaal"] is not None:
+            # zelfverbruik zon = opbrengst min wat naar het net gaat
+            d["zelf"][i] = r["zonopbrengst_totaal"] - (r["totaal_export"] or 0)
+
+    # Enkel van de eerste tot de laatste maand met echte data (> 0).
+    actief = [i for i in range(len(sleutels))
+              if any((reeks[w][s][i] or 0) > 0 for w in woningen for s in reeks[w])]
+    if actief:
+        a, b = actief[0], actief[-1] + 1
+    else:
+        a, b = 0, 0
+    sleutels = sleutels[a:b]
+    data = {
+        "woningen": woningen,
+        "jaren": [j for j, _ in sleutels],
+        "labels": [f"{MAANDNAMEN[m]}-{str(j)[2:]}" for j, m in sleutels],
+        "reeks": {w: {s: v[a:b] for s, v in reeks[w].items()} for w in woningen},
+    }
+    return render_template("totaal.html", data=data)
+
+
 @app.route("/grafieken")
 def grafieken():
     # Grafieken zijn samengevoegd met de hoofdpagina — oude links blijven werken.

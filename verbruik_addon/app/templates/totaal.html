@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Totaal{% endblock %}
+{% block content %}
+<h1>Totaal — alle woningen samen</h1>
+<p class="subtitle">Energie van de woningen opgeteld, om de evolutie over de jaren te volgen.
+    * = onvolledig jaar (niet alle 12 maanden in de data).</p>
+
+<div class="filters">
+    <div class="filter-groep">
+        <span class="filter-label">Woningen</span>
+        {% for w in data.woningen %}
+        <button type="button" class="chip actief" data-groep="woning" data-waarde="{{ w }}">{{ w }}</button>
+        {% endfor %}
+    </div>
+    <div class="filter-groep">
+        <span class="filter-label">Soort</span>
+        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas")] %}
+        <button type="button" class="chip actief" data-groep="soort" data-waarde="{{ id }}">{{ label }}</button>
+        {% endfor %}
+    </div>
+    <div class="filter-groep">
+        <span class="filter-label">Opdelen per</span>
+        <button type="button" class="chip actief" data-groep="opdeling" data-waarde="soort">Soort</button>
+        <button type="button" class="chip" data-groep="opdeling" data-waarde="woning">Woning</button>
+    </div>
+</div>
+
+<p id="leeg" class="muted" style="display:none;">Kies minstens één woning en één soort om iets te zien.</p>
+
+<div class="chart-grid">
+    <div class="chart-card full"><canvas id="totaalJaarChart"></canvas></div>
+    <div class="chart-card full"><canvas id="totaalMaandChart"></canvas></div>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='kleuren.js') }}"></script>
+<script>
+const DATA = {{ data | tojson }};
+
+Chart.defaults.color = "#6b7280";
+Chart.defaults.borderColor = "#e0e2e7";
+
+const SOORTEN = [
+    { id: "piek", label: "Piek verbruik (net)", kleur: KLEUR.piek },
+    { id: "dal",  label: "Dal verbruik (net)",  kleur: KLEUR.dal },
+    { id: "zelf", label: "Zelfverbruik zon",    kleur: KLEUR.zelf },
+    { id: "gas",  label: "Gas",                 kleur: KLEUR.gas }
+];
+const staat = {
+    woning: new Set(DATA.woningen),
+    soort: new Set(SOORTEN.map(s => s.id)),
+    opdeling: "soort"
+};
+
+// Groepen van maand-indexen: per jaar (alle maanden van dat jaar) of per maand.
+const jaren = [...new Set(DATA.jaren)];
+const jaarGroepen = jaren.map(j => DATA.jaren.map((x, i) => x === j ? i : -1).filter(i => i >= 0));
+const maandGroepen = DATA.labels.map((_, i) => [i]);
+const jaarLabels = jaren.map((j, k) => jaarGroepen[k].length < 12 ? j + "*" : String(j));
+
+// Som over een groep maanden, woningen en soorten; null als er nergens data is.
+function som(groep, woningen, soorten) {
+    let totaal = 0, heeftData = false;
+    for (const i of groep) for (const w of woningen) for (const s of soorten) {
+        const v = DATA.reeks[w][s][i];
+        if (v !== null && v !== undefined) { totaal += v; heeftData = true; }
+    }
+    return heeftData ? totaal : null;
+}
+
+function reeksen(groepen) {
+    const woningen = DATA.woningen.filter(w => staat.woning.has(w));
+    const soorten = SOORTEN.filter(s => staat.soort.has(s.id));
+    const soortIds = soorten.map(s => s.id);
+    if (staat.opdeling === "soort") {
+        return soorten.map(s => ({
+            label: s.label, backgroundColor: s.kleur, stack: "energie",
+            data: groepen.map(g => som(g, woningen, [s.id]))
+        }));
+    }
+    return woningen.map(w => ({
+        label: w, backgroundColor: KLEUR.woning[w], stack: "energie",
+        data: groepen.map(g => som(g, [w], soortIds))
+    }));
+}
+
+function opties(titel, draaiLabels) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: { display: true, text: titel, color: "#1c1f24", font: { size: 16 } },
+            legend: { onClick: () => {} }   // filteren gebeurt met de knoppen, niet via de legende
+        },
+        scales: {
+            x: { stacked: true, ticks: draaiLabels ? { maxRotation: 90, minRotation: 90 } : {} },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: "kWh" } }
+        }
+    };
+}
+
+const jaarChart = new Chart(document.getElementById("totaalJaarChart"), {
+    type: "bar", data: { labels: jaarLabels, datasets: [] },
+    options: opties("Totaal energieverbruik per jaar (kWh)", false)
+});
+const maandChart = new Chart(document.getElementById("totaalMaandChart"), {
+    type: "bar", data: { labels: DATA.labels, datasets: [] },
+    options: opties("Totaal energieverbruik per maand (kWh)", true)
+});
+
+function bijwerken() {
+    jaarChart.data.datasets = reeksen(jaarGroepen);
+    maandChart.data.datasets = reeksen(maandGroepen);
+    jaarChart.update();
+    maandChart.update();
+    const leeg = staat.woning.size === 0 || staat.soort.size === 0;
+    document.getElementById("leeg").style.display = leeg ? "" : "none";
+}
+
+// Kleurvakje bij de knoppen (zelfde palet als de grafieken)
+document.querySelectorAll(".chip").forEach(knop => {
+    const groep = knop.dataset.groep, waarde = knop.dataset.waarde;
+    const kleur = groep === "soort" ? KLEUR[waarde] : groep === "woning" ? KLEUR.woning[waarde] : null;
+    if (kleur) {
+        const vakje = document.createElement("i");
+        vakje.className = "swatch";
+        vakje.style.background = kleur;
+        knop.prepend(vakje);
+    }
+    knop.addEventListener("click", () => {
+        if (groep === "opdeling") {
+            staat.opdeling = waarde;
+            document.querySelectorAll('.chip[data-groep="opdeling"]')
+                .forEach(k => k.classList.toggle("actief", k === knop));
+        } else {
+            const set = staat[groep];
+            if (set.has(waarde)) set.delete(waarde); else set.add(waarde);
+            knop.classList.toggle("actief", set.has(waarde));
+        }
+        bijwerken();
+    });
+});
+
+bijwerken();
+</script>
+{% endblock %}

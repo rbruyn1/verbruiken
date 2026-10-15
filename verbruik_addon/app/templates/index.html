@@ -55,6 +55,7 @@
 {% endif %}
 
 <script src="{{ url_for('static', filename='vendor/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='kleuren.js') }}"></script>
 <script>
 const labels = {{ labels | tojson }};
 const piek = {{ piek | tojson }};
@@ -82,17 +83,6 @@ const jaarZelfverbruik = {{ jaar_zelfverbruik | tojson }};
 Chart.defaults.color = "#6b7280";
 Chart.defaults.borderColor = "#e0e2e7";
 
-// Eén kleurenpalet voor alle grafieken, zodat dezelfde grootheid overal
-// dezelfde kleur heeft (gas = paars, dal = oranje, zelfverbruik = groen, zonopbrengst = teal, ...).
-const KLEUR = {
-    piek: "#3576c9",
-    dal:  "#f5a623",
-    zelf: "#2e9e52",
-    zon:  "#17a2b8",
-    gas:  "#8e44ad",
-    elek: "#3576c9",
-    water: "#4fb3e8"
-};
 
 if (heeftGas) {
     new Chart(document.getElementById("gasChart"), {

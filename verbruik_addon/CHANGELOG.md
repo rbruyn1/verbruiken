@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+- Nieuwe tab "Totaal": de energie van alle woningen samen in twee gestapelde
+  grafieken (per jaar en per maand) om de evolutie over de jaren te volgen.
+  Filterknoppen om woningen en soorten (piek, dal, zelfverbruik zon, gas)
+  aan of uit te zetten, en om op te delen per soort of per woning (zo zie je
+  Tienen afnemen en Binkom opkomen). Onvolledige jaren krijgen een *. De
+  grafieken lopen van de eerste tot de laatste maand met data.
+- De grafiekkleuren staan nu in één gedeeld bestand (static/kleuren.js), dat
+  de hoofdpagina en de tab Totaal allebei gebruiken.
+
 ## 0.3.7
 - Nieuwe grafiek "Zonopbrengst (kWh per maand)". De grafiek begint bij de
   eerste maand met een echte opbrengst en eindigt bij de laatste (Tienen

@@ -96,3 +96,17 @@ button.danger {
     padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer;
 }
 button.danger:hover { background: #c0392b; color: #fff; }
+
+/* Filterknoppen op de tab Totaal */
+.filters { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; margin: 0.5rem 0 1rem; align-items: center; }
+.filter-groep { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.filter-label { color: var(--muted); font-size: 0.8rem; margin-right: 0.2rem; }
+.chip {
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    border-radius: 999px; padding: 0.3rem 0.85rem; font-size: 0.85rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 0.4rem; font-family: inherit;
+}
+.chip:hover { border-color: var(--accent); }
+.chip.actief { background: #fff4e0; border-color: var(--accent); color: var(--text); }
+.chip .swatch { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
+.chip:not(.actief) .swatch { opacity: 0.35; }
