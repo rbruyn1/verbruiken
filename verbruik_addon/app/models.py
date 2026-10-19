@@ -76,6 +76,13 @@ CREATE TABLE IF NOT EXISTS energie_koppeling (
     veld TEXT NOT NULL,
     PRIMARY KEY (woning, statistic_id)
 );
+
+-- Welke standaardkoppelingen al eens zijn toegepast, zodat een veld dat je zelf leegmaakt leeg blijft
+CREATE TABLE IF NOT EXISTS koppeling_seed (
+    woning TEXT NOT NULL,
+    veld TEXT NOT NULL,
+    PRIMARY KEY (woning, veld)
+);
 """
 
 
@@ -137,34 +144,36 @@ def _migratie_v1(conn):
     conn.execute("PRAGMA user_version = 1")
 
 
-# Standaardkoppeling voor de P1-meter in de kelder van Tienen (tarief 1 = dag/piek, tarief 2 = nacht/dal).
+# Standaardkoppeling voor Tienen (gecontroleerd tegen de opgeslagen maanden: augustus komt exact overeen).
+# P1-meter in de kelder: tarief 1 = dag/piek, tarief 2 = nacht/dal. Zon = SolarEdge-omvormer Tienen.
 STANDAARD_KOPPELING = {
     "Tienen": {
         "sensor.p1_total_power_import_t1": "piek_verbruik",
         "sensor.p1_total_power_import_t2": "dal_verbruik",
         "sensor.p1_total_power_export_t1": "piek_export",
         "sensor.p1_total_power_export_t2": "dal_export",
+        "sensor.solaredge_ac_energy_kwh": "zonopbrengst_totaal",
     },
 }
-_PIEK_DAL_VELDEN = ("piek_verbruik", "dal_verbruik", "piek_export", "dal_export")
 
 
 def _seed_koppeling(conn):
-    """Zet de standaardkoppeling alleen als er voor die woning nog geen piek/dal-veld gekoppeld is.
-    Wat je zelf instelt, blijft dus staan."""
+    """Zet een standaardbron op een veld, maar enkel de eerste keer en enkel als dat veld voor die woning
+    nog leeg is. Wat je zelf instelt of leegmaakt, blijft dus zoals jij het wil."""
     for woning, bronnen in STANDAARD_KOPPELING.items():
-        al = conn.execute(
-            "SELECT COUNT(*) FROM energie_koppeling WHERE woning=? AND veld IN (%s)"
-            % ",".join("?" * len(_PIEK_DAL_VELDEN)),
-            (woning, *_PIEK_DAL_VELDEN),
-        ).fetchone()[0]
-        if al:
-            continue
         for sid, veld in bronnen.items():
-            conn.execute(
-                "INSERT OR REPLACE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
-                (woning, sid, veld),
-            )
+            gedaan = conn.execute("SELECT 1 FROM koppeling_seed WHERE woning=? AND veld=?",
+                                  (woning, veld)).fetchone()
+            if gedaan:
+                continue
+            bezet = conn.execute("SELECT 1 FROM energie_koppeling WHERE woning=? AND veld=?",
+                                 (woning, veld)).fetchone()
+            if not bezet:
+                conn.execute(
+                    "INSERT OR IGNORE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
+                    (woning, sid, veld),
+                )
+            conn.execute("INSERT OR IGNORE INTO koppeling_seed (woning, veld) VALUES (?, ?)", (woning, veld))
 
 
 def init_db():

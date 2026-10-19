@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.5
+- Standaardkoppeling Tienen uitgebreid met de zonopbrengst (`sensor.solaredge_ac_energy_kwh`).
+  Standaardbronnen worden per veld één keer gezet, enkel als dat veld nog leeg is: wat je zelf
+  instelt of leegmaakt blijft zoals jij het wil.
+
 ## 0.5.4
 - Energie-koppeling: tabel vervangen door kaarten (één per veld), leesbaar op pc en telefoon.
   Lange sensornamen breken nu af, en de vinkjes hebben hun normale grootte.
