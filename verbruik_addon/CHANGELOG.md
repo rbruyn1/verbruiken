@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+- Energie-koppeling: tabel vervangen door kaarten (één per veld), leesbaar op pc en telefoon.
+  Lange sensornamen breken nu af, en de vinkjes hebben hun normale grootte.
+
 ## 0.5.3
 - Standaardkoppeling voor Tienen: de P1-tariefsensoren (`p1_total_power_import_t1/_t2` →
   piek/dal verbruik, `p1_total_power_export_t1/_t2` → piek/dal export) staan vanaf nu

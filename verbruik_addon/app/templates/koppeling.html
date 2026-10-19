@@ -2,8 +2,8 @@
 {% block title %}Energie-koppeling{% endblock %}
 {% block content %}
 <h1>Energie-koppeling</h1>
-<p class="subtitle">Per veld van het maandformulier kies je uit welke sensor(en) in Home Assistant de waarde komt.
-    Daarna klik je bij "+ Maand invoeren" op <b>Overnemen uit Energie</b>. De koppeling hoort bij de gekozen woning.</p>
+<p class="subtitle">Kies per veld van het maandformulier welke sensor(en) uit Home Assistant de waarde leveren.
+    Daarna gebruik je bij "+ Maand invoeren" de knop <b>Overnemen uit Energie</b>. De koppeling geldt per woning.</p>
 
 <div class="woning-tabs">
     {% for w in woningen %}
@@ -13,44 +13,38 @@
 
 {% if fout %}<div class="flash">{{ fout }}</div>{% endif %}
 {% if voorstel_modus %}
-<div class="flash">Voor {{ woning }} is nog niets opgeslagen. Wat hieronder aangevinkt staat, is een voorstel uit je Energiedashboard:
+<div class="flash">Voor {{ woning }} is nog niets opgeslagen. Wat aangevinkt staat, is een voorstel uit je Energiedashboard:
     controleer het en klik op Opslaan.</div>
 {% endif %}
 
-<form method="post" class="entry" style="max-width:none">
+<form method="post" class="koppel-form">
     <input type="hidden" name="woning" value="{{ woning }}">
-    <div class="table-scroll">
-    <table>
-        <thead><tr><th>Veld in het maandformulier</th><th>Gekoppelde bron(nen)</th><th>Bron toevoegen</th></tr></thead>
-        <tbody>
+    <div class="koppel-grid">
         {% for veld, label in velden %}
-        <tr>
-            <td><b>{{ label }}</b></td>
-            <td>
-                {% for b in per_veld[veld] %}
-                <label style="display:block;margin:2px 0;">
-                    <input type="checkbox" name="keep" value="{{ veld }}|{{ b.statistic_id }}" checked>
-                    {{ b.naam }}{% if b.naam != b.statistic_id %} <span class="muted">({{ b.statistic_id }})</span>{% endif %}
-                    {% if b.eenheid %}<span class="muted">· {{ b.eenheid }}</span>{% endif %}
-                    {% if b.onbekend %}<span class="muted">· niet gevonden in HA</span>{% endif %}
-                </label>
-                {% else %}
-                <span class="muted">— niet gekoppeld —</span>
-                {% endfor %}
-            </td>
-            <td><input type="text" name="add_{{ veld }}" list="alle-bronnen" autocomplete="off"
-                       placeholder="sensor zoeken…" style="width:100%"></td>
-        </tr>
+        <div class="koppel-kaart">
+            <h3>{{ label }}</h3>
+            {% for b in per_veld[veld] %}
+            <label class="koppel-bron">
+                <input type="checkbox" name="keep" value="{{ veld }}|{{ b.statistic_id }}" checked>
+                <span class="koppel-tekst">
+                    <span class="koppel-naam">{{ b.naam }}</span>
+                    <span class="koppel-id">{{ b.statistic_id }}{% if b.eenheid %} · {{ b.eenheid }}{% endif %}{% if b.onbekend %} · niet gevonden in HA{% endif %}</span>
+                </span>
+            </label>
+            {% else %}
+            <p class="koppel-leeg">Nog niets gekoppeld</p>
+            {% endfor %}
+            <input type="text" class="koppel-add" name="add_{{ veld }}" list="alle-bronnen" autocomplete="off"
+                   placeholder="+ sensor zoeken en toevoegen">
+        </div>
         {% endfor %}
-        </tbody>
-    </table>
     </div>
     <datalist id="alle-bronnen">
         {% for a in alle %}<option value="{{ a.statistic_id }}">{{ a.naam }} ({{ a.eenheid }})</option>{% endfor %}
     </datalist>
-    <p class="muted" style="font-size:0.8rem;">Vink een gekoppelde bron uit om ze te verwijderen. Meerdere bronnen op hetzelfde veld
-        worden opgeteld (bv. twee omvormers). Eén bron hoort bij maar één veld. Totaal afname/export en gas in kWh worden
-        daarna zoals altijd automatisch berekend. Bedragen (€) uit de Engie-app komen niet uit Home Assistant en vul je zelf in.</p>
+    <p class="koppel-uitleg">Een gekoppelde bron verwijder je door ze uit te vinken. Meerdere bronnen op hetzelfde veld worden opgeteld
+        (bv. twee omvormers). Eén bron hoort bij maar één veld. Totalen en gas in kWh worden daarna automatisch berekend.
+        Bedragen uit de Engie-app komen niet uit Home Assistant; die vul je zelf in.</p>
     <button type="submit">Opslaan</button>
 </form>
 {% endblock %}

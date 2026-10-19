@@ -112,3 +112,26 @@ button.danger:hover { background: #c0392b; color: #fff; }
 .chip:not(.actief) .swatch { opacity: 0.35; }
 
 .energie-overnemen { margin: 0.9rem 0 0.2rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ---- Energie-koppeling: kaarten i.p.v. tabel (leesbaar op pc én telefoon) ---- */
+.koppel-form { max-width: 1100px; }
+.koppel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.9rem; }
+.koppel-kaart { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; }
+.koppel-kaart h3 { margin: 0 0 0.15rem; font-size: 1rem; }
+.koppel-kaart .koppel-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.6rem; }
+.koppel-bron { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.45rem 0.5rem; margin-bottom: 0.35rem;
+               background: #fff4e0; border: 1px solid var(--accent); border-radius: 6px; cursor: pointer; }
+.koppel-bron input[type=checkbox] { width: 1.2rem; height: 1.2rem; margin: 0.15rem 0 0; flex: none; }
+.koppel-tekst { display: block; min-width: 0; }
+.koppel-naam { display: block; font-size: 0.92rem; font-weight: 600; overflow-wrap: anywhere; }
+.koppel-id { display: block; color: var(--muted); font-size: 0.78rem; overflow-wrap: anywhere; }
+.koppel-leeg { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0 0.5rem; }
+.koppel-add { width: 100%; box-sizing: border-box; padding: 0.55rem; font-size: 1rem; border: 1px solid var(--border); border-radius: 6px; }
+.koppel-form button { margin-top: 1.1rem; background: var(--accent); color: #fff; border: none; padding: 0.7rem 1.6rem;
+                      border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.koppel-form button:hover { background: var(--accent-dark); }
+.koppel-uitleg { color: var(--muted); font-size: 0.82rem; margin-top: 1rem; }
+@media (max-width: 600px) {
+    .koppel-grid { grid-template-columns: 1fr; }
+    .koppel-form button { width: 100%; }
+}
