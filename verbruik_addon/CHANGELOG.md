@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.3
+- Standaardkoppeling voor Tienen: de P1-tariefsensoren (`p1_total_power_import_t1/_t2` →
+  piek/dal verbruik, `p1_total_power_export_t1/_t2` → piek/dal export) staan vanaf nu
+  vanzelf ingesteld, zolang je zelf nog geen piek/dal-veld gekoppeld hebt.
+
 ## 0.5.2
 - Energie-koppeling herwerkt: één rij per veld van het maandformulier (piek/dal import,
   piek/dal export, zon, batterij, gas, water). Opgeslagen bronnen staan direct bij hun veld

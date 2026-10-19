@@ -137,11 +137,42 @@ def _migratie_v1(conn):
     conn.execute("PRAGMA user_version = 1")
 
 
+# Standaardkoppeling voor de P1-meter in de kelder van Tienen (tarief 1 = dag/piek, tarief 2 = nacht/dal).
+STANDAARD_KOPPELING = {
+    "Tienen": {
+        "sensor.p1_total_power_import_t1": "piek_verbruik",
+        "sensor.p1_total_power_import_t2": "dal_verbruik",
+        "sensor.p1_total_power_export_t1": "piek_export",
+        "sensor.p1_total_power_export_t2": "dal_export",
+    },
+}
+_PIEK_DAL_VELDEN = ("piek_verbruik", "dal_verbruik", "piek_export", "dal_export")
+
+
+def _seed_koppeling(conn):
+    """Zet de standaardkoppeling alleen als er voor die woning nog geen piek/dal-veld gekoppeld is.
+    Wat je zelf instelt, blijft dus staan."""
+    for woning, bronnen in STANDAARD_KOPPELING.items():
+        al = conn.execute(
+            "SELECT COUNT(*) FROM energie_koppeling WHERE woning=? AND veld IN (%s)"
+            % ",".join("?" * len(_PIEK_DAL_VELDEN)),
+            (woning, *_PIEK_DAL_VELDEN),
+        ).fetchone()[0]
+        if al:
+            continue
+        for sid, veld in bronnen.items():
+            conn.execute(
+                "INSERT OR REPLACE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
+                (woning, sid, veld),
+            )
+
+
 def init_db():
     conn = get_connection()
     conn.executescript(SCHEMA)
     _ensure_columns(conn)
     _migratie_v1(conn)
+    _seed_koppeling(conn)
     conn.commit()
     conn.close()
 
