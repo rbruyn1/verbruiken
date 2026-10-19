@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+- Energie-koppeling herwerkt: één rij per veld van het maandformulier (piek/dal import,
+  piek/dal export, zon, batterij, gas, water). Opgeslagen bronnen staan direct bij hun veld
+  en na het opslaan zie je meteen wat er gekoppeld is. Verwijderen via uitvinken, toevoegen
+  via een zoekveld over alle kWh/m³-statistieken in Home Assistant (ook buiten Energie).
+- Eerste keer (nog niets opgeslagen) toont de pagina de voorstellen uit het Energiedashboard.
+
 ## 0.5.1
 - Energie-koppeling: je kunt nu ook bronnen koppelen die niet in het Energiedashboard
   staan. Onderaan de tabel staan drie lege rijen met een zoekveld over alle kWh/m³-statistieken

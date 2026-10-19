@@ -705,27 +705,34 @@ def _koppeling(woning):
 
 @app.route("/koppeling", methods=["GET", "POST"])
 def koppeling():
-    """Koppel de bronnen uit het Energiedashboard van Home Assistant aan de
-    velden van een maand, per woning."""
+    """Koppel bronnen uit Home Assistant (Energiedashboard of eender welke kWh/m3-statistiek)
+    aan de velden van een maand, per woning. Eén rij per formulierveld."""
     woning = request.values.get("woning") or WONINGEN[0]
     if woning not in WONINGEN:
         abort(404)
 
     if request.method == "POST":
+        paren = {}
+        for k in request.form.getlist("keep"):          # bestaande koppelingen die blijven
+            veld, _, sid = k.partition("|")
+            if sid.strip() and veld in GELDIGE_VELDEN:
+                paren[sid.strip()] = veld
+        for veld in GELDIGE_VELDEN:                       # nieuw toegevoegde bronnen
+            for sid in request.form.getlist("add_" + veld):
+                if sid.strip():
+                    paren[sid.strip()] = veld
         conn = get_connection()
         conn.execute("DELETE FROM energie_koppeling WHERE woning=?", (woning,))
-        for sid, veld in zip(request.form.getlist("sid"), request.form.getlist("veld")):
-            if sid and veld in GELDIGE_VELDEN:
-                conn.execute(
-                    "INSERT OR REPLACE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
-                    (woning, sid, veld),
-                )
+        for sid, veld in paren.items():
+            conn.execute(
+                "INSERT OR REPLACE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
+                (woning, sid, veld),
+            )
         conn.commit()
         conn.close()
-        flash(f"Energie-koppeling voor {woning} opgeslagen.")
+        flash(f"Energie-koppeling voor {woning} opgeslagen ({len(paren)} bron(nen)).")
         return redirect(url_for("koppeling", woning=woning))
 
-    opgeslagen = dict(_koppeling(woning))
     fout, bronnen, alle = None, [], []
     try:
         with HAClient(timeout=8) as ha:
@@ -733,21 +740,27 @@ def koppeling():
             try:
                 alle = ha.alle_statistieken()
             except HAFout:
-                alle = []        # extra keuzelijst is optioneel
+                alle = []
     except HAFout as e:
         fout = str(e)
 
-    rijen = []
-    gezien = set()
-    for b in bronnen:
-        gezien.add(b["statistic_id"])
-        rijen.append({**b, "veld": opgeslagen.get(b["statistic_id"], b["voorstel"]), "bekend": True})
-    for sid, veld in opgeslagen.items():      # opgeslagen, maar niet (meer) in Energie gevonden
-        if sid not in gezien:
-            rijen.append({"statistic_id": sid, "naam": sid, "soort": "niet (meer) in Energie",
-                          "eenheid": None, "veld": veld, "bekend": False})
-    return render_template("koppeling.html", woningen=WONINGEN, woning=woning, rijen=rijen,
-                           velden=KOPPEL_VELDEN, fout=fout, alle=alle)
+    info = {a["statistic_id"]: a for a in alle}
+    info.update({b["statistic_id"]: b for b in bronnen})
+
+    opgeslagen = _koppeling(woning)
+    voorstel_modus = not opgeslagen
+    if voorstel_modus:       # eerste keer: voorstellen uit het Energiedashboard
+        opgeslagen = [(b["statistic_id"], b["voorstel"]) for b in bronnen if b["voorstel"]]
+
+    per_veld = {v: [] for v, _ in KOPPEL_VELDEN if v}
+    for sid, veld in opgeslagen:
+        if veld in per_veld:
+            i = info.get(sid, {})
+            per_veld[veld].append({"statistic_id": sid, "naam": i.get("naam") or sid,
+                                   "eenheid": i.get("eenheid"), "onbekend": sid not in info and not fout})
+    velden = [(v, l) for v, l in KOPPEL_VELDEN if v]
+    return render_template("koppeling.html", woningen=WONINGEN, woning=woning, velden=velden,
+                           per_veld=per_veld, alle=alle, fout=fout, voorstel_modus=voorstel_modus)
 
 
 @app.route("/energie/maand")

@@ -25,10 +25,10 @@ WS_URL = os.environ.get("HA_WS_URL", "ws://supervisor/core/websocket")
 # Velden van het maandformulier waaraan een Energie-bron gekoppeld kan worden.
 KOPPEL_VELDEN = [
     ("", "— niet overnemen —"),
-    ("piek_verbruik", "Piek verbruik (afname)"),
-    ("dal_verbruik", "Dal verbruik (afname)"),
-    ("piek_export", "Piek export (injectie)"),
-    ("dal_export", "Dal export (injectie)"),
+    ("piek_verbruik", "Piek verbruik — import (tarief 1 / dag)"),
+    ("dal_verbruik", "Dal verbruik — import (tarief 2 / nacht)"),
+    ("piek_export", "Piek export — injectie (tarief 1 / dag)"),
+    ("dal_export", "Dal export — injectie (tarief 2 / nacht)"),
     ("zonopbrengst_totaal", "Zonopbrengst"),
     ("batterij_laden", "Batterij laden"),
     ("batterij_ontladen", "Batterij ontladen"),
