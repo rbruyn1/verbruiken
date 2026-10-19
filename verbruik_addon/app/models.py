@@ -68,6 +68,14 @@ CREATE TABLE IF NOT EXISTS jaaroverzicht (
 
     UNIQUE(woning, jaar)
 );
+
+-- Welke bron uit het Energiedashboard van Home Assistant bij welk formulierveld hoort
+CREATE TABLE IF NOT EXISTS energie_koppeling (
+    woning TEXT NOT NULL,
+    statistic_id TEXT NOT NULL,
+    veld TEXT NOT NULL,
+    PRIMARY KEY (woning, statistic_id)
+);
 """
 
 

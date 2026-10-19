@@ -110,3 +110,5 @@ button.danger:hover { background: #c0392b; color: #fff; }
 .chip.actief { background: #fff4e0; border-color: var(--accent); color: var(--text); }
 .chip .swatch { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
 .chip:not(.actief) .swatch { opacity: 0.35; }
+
+.energie-overnemen { margin: 0.9rem 0 0.2rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }

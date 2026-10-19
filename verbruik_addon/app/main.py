@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
 from pathlib import Path
 import calendar
 import os
 from datetime import date
 from models import get_connection, init_db
 from calculations import verrijk, jaaroverzicht_gem_per_maand
+from ha_energie import HAClient, HAFout, KOPPEL_VELDEN, GELDIGE_VELDEN
 
 app = Flask(__name__)
 app.secret_key = "verbruik-addon"  # lokale HA add-on, geen publieke login
@@ -690,6 +691,81 @@ def totaal():
         "reeks": {w: {s: v[a:b] for s, v in reeks[w].items()} for w in woningen},
     }
     return render_template("totaal.html", data=data)
+
+
+def _koppeling(woning):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT statistic_id, veld FROM energie_koppeling WHERE woning=? ORDER BY statistic_id",
+        (woning,),
+    ).fetchall()
+    conn.close()
+    return [(r["statistic_id"], r["veld"]) for r in rows]
+
+
+@app.route("/koppeling", methods=["GET", "POST"])
+def koppeling():
+    """Koppel de bronnen uit het Energiedashboard van Home Assistant aan de
+    velden van een maand, per woning."""
+    woning = request.values.get("woning") or WONINGEN[0]
+    if woning not in WONINGEN:
+        abort(404)
+
+    if request.method == "POST":
+        conn = get_connection()
+        conn.execute("DELETE FROM energie_koppeling WHERE woning=?", (woning,))
+        for sid, veld in zip(request.form.getlist("sid"), request.form.getlist("veld")):
+            if sid and veld in GELDIGE_VELDEN:
+                conn.execute(
+                    "INSERT OR REPLACE INTO energie_koppeling (woning, statistic_id, veld) VALUES (?, ?, ?)",
+                    (woning, sid, veld),
+                )
+        conn.commit()
+        conn.close()
+        flash(f"Energie-koppeling voor {woning} opgeslagen.")
+        return redirect(url_for("koppeling", woning=woning))
+
+    opgeslagen = dict(_koppeling(woning))
+    fout, bronnen = None, []
+    try:
+        with HAClient(timeout=8) as ha:
+            bronnen = ha.energie_bronnen()
+    except HAFout as e:
+        fout = str(e)
+
+    rijen = []
+    gezien = set()
+    for b in bronnen:
+        gezien.add(b["statistic_id"])
+        rijen.append({**b, "veld": opgeslagen.get(b["statistic_id"], b["voorstel"]), "bekend": True})
+    for sid, veld in opgeslagen.items():      # opgeslagen, maar niet (meer) in Energie gevonden
+        if sid not in gezien:
+            rijen.append({"statistic_id": sid, "naam": sid, "soort": "niet (meer) in Energie",
+                          "eenheid": None, "veld": veld, "bekend": False})
+    return render_template("koppeling.html", woningen=WONINGEN, woning=woning, rijen=rijen,
+                           velden=KOPPEL_VELDEN, fout=fout)
+
+
+@app.route("/energie/maand")
+def energie_maand():
+    """JSON met de maandwaarden uit het Energiedashboard, voor de knop
+    'Overnemen uit Energie' in het maandformulier. Slaat niets op."""
+    woning = request.args.get("woning", "")
+    try:
+        jaar, maand = int(request.args.get("jaar", "")), int(request.args.get("maand", ""))
+    except ValueError:
+        return jsonify(fout="Vul eerst een geldig jaar en een geldige maand in."), 400
+    if woning not in WONINGEN or not 1 <= maand <= 12 or not 2000 <= jaar <= 2100:
+        return jsonify(fout="Ongeldige woning, maand of jaar."), 400
+    koppeling_ = _koppeling(woning)
+    if not koppeling_:
+        return jsonify(fout=f"Nog geen koppeling ingesteld voor {woning}. "
+                            "Stel ze eerst in via 'Energie-koppeling' bovenaan."), 400
+    try:
+        with HAClient() as ha:
+            return jsonify(ha.maand_waarden(koppeling_, jaar, maand))
+    except HAFout as e:
+        return jsonify(fout=str(e)), 502
 
 
 @app.route("/grafieken")

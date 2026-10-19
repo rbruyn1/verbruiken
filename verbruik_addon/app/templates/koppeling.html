@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Energie-koppeling{% endblock %}
+{% block content %}
+<h1>Energie-koppeling</h1>
+<p class="subtitle">Koppel de bronnen uit het Energiedashboard van Home Assistant aan de velden van een maand.
+    Daarna klik je bij "+ Maand invoeren" op <b>Overnemen uit Energie</b>: de maandwaarden worden ingevuld,
+    jij controleert ze en slaat zelf op. De koppeling hoort bij de gekozen woning.</p>
+
+<div class="woning-tabs">
+    {% for w in woningen %}
+        <a href="{{ url_for('koppeling', woning=w) }}" class="{{ 'active' if w == woning }}">{{ w }}</a>
+    {% endfor %}
+</div>
+
+{% if fout %}
+<div class="flash">{{ fout }}</div>
+{% endif %}
+
+{% if rijen %}
+<form method="post" class="entry" style="max-width:none">
+    <input type="hidden" name="woning" value="{{ woning }}">
+    <div class="table-scroll">
+    <table>
+        <thead><tr><th>Bron in Energie</th><th>Soort</th><th>Eenheid</th><th>Koppelen aan</th></tr></thead>
+        <tbody>
+        {% for b in rijen %}
+        <tr>
+            <td>{{ b.naam }}{% if b.naam != b.statistic_id %}<br><span class="muted">{{ b.statistic_id }}</span>{% endif %}
+                <input type="hidden" name="sid" value="{{ b.statistic_id }}"></td>
+            <td>{{ b.soort }}</td>
+            <td>{{ b.eenheid or "?" }}</td>
+            <td><select name="veld">
+                {% for waarde, label in velden %}
+                <option value="{{ waarde }}" {{ "selected" if waarde == b.veld }}>{{ label }}</option>
+                {% endfor %}
+            </select></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <p class="muted" style="font-size:0.8rem;">Meerdere bronnen op hetzelfde veld worden opgeteld (bv. twee omvormers).
+        Totaal afname/export en gas in kWh worden daarna zoals altijd automatisch berekend. Bedragen (€) uit de Engie-app
+        komen niet uit Energie en vul je nog zelf in.</p>
+    <button type="submit">Opslaan</button>
+</form>
+{% elif not fout %}
+<p class="muted">Er staan geen bronnen in het Energiedashboard van Home Assistant.</p>
+{% endif %}
+{% endblock %}

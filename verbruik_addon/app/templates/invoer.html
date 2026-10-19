@@ -24,6 +24,11 @@
         </div>
     </div>
 
+    <div class="energie-overnemen">
+        <button type="button" class="chip" id="energie-overnemen">Overnemen uit Energie</button>
+        <span id="energie-status" class="muted"></span>
+    </div>
+
     {% for veld, label in velden %}
     {% set is_gas_veld = veld in ('gas_m3', 'gas_kwh', 'prijs_gas_eur') %}
     <div class="{{ 'gas-veld' if is_gas_veld }}">
@@ -112,6 +117,49 @@ if (gasFactor) {
         kwh.addEventListener("input", () => { handmatig = true; });
         kwh.addEventListener("dblclick", () => { handmatig = false; herberekenGas(); });
     }
+}
+
+// Maandwaarden uit het Energiedashboard van Home Assistant overnemen. Er wordt
+// niets opgeslagen: de velden worden ingevuld en jij controleert en klikt op Opslaan.
+const overnemenKnop = document.getElementById("energie-overnemen");
+if (overnemenKnop) {
+    overnemenKnop.addEventListener("click", async () => {
+        const status = document.getElementById("energie-status");
+        const woning = document.getElementById("woning-select").value;
+        const jaar = document.querySelector('input[name="jaar"]').value;
+        const maand = document.querySelector('input[name="maand"]').value;
+        if (!jaar || !maand) { status.textContent = "Vul eerst jaar en maand in."; return; }
+        status.textContent = "Bezig met ophalen…";
+        try {
+            const antwoord = await fetch("{{ url_for('energie_maand') }}?woning=" + encodeURIComponent(woning)
+                                         + "&jaar=" + encodeURIComponent(jaar) + "&maand=" + encodeURIComponent(maand));
+            const data = await antwoord.json();
+            if (!antwoord.ok || data.fout) { status.textContent = data.fout || "Ophalen mislukt."; return; }
+            let aantal = 0;
+            for (const [veld, waarde] of Object.entries(data.waarden)) {
+                const el = document.getElementById(veld);
+                if (!el) continue;
+                el.value = String(waarde);
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                aantal++;
+            }
+            // totalen (piek+dal) en gas kWh (uit m³) opnieuw automatisch laten berekenen
+            ["totaal_verbruik_afname", "totaal_export"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.dispatchEvent(new Event("dblclick"));
+            });
+            if (data.waarden.gas_m3 !== undefined && data.waarden.gas_kwh === undefined) {
+                const kwh = document.getElementById("gas_kwh");
+                if (kwh) kwh.dispatchEvent(new Event("dblclick"));
+            }
+            status.textContent = aantal
+                ? `${aantal} velden overgenomen. Controleer ze en klik op Opslaan.`
+                : "Er zijn geen waarden gevonden om over te nemen.";
+            if (data.waarschuwingen && data.waarschuwingen.length) status.textContent += " " + data.waarschuwingen.join(" ");
+        } catch (e) {
+            status.textContent = "Ophalen mislukt: " + e;
+        }
+    });
 }
 </script>
 {% endblock %}

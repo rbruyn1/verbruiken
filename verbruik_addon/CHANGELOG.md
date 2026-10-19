@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0
+- Maandwaarden overnemen uit het Energiedashboard van Home Assistant. In het
+  maandformulier staat een knop "Overnemen uit Energie": die haalt de
+  maandtotalen van de gekozen woning, jaar en maand op en vult de velden in.
+  Er wordt niets automatisch bewaard: jij controleert en klikt zelf op Opslaan.
+- Nieuw scherm "Energie-koppeling" (rechtsboven): per woning koppel je elke
+  bron uit Energie (afname, injectie, zon, batterij, gas, water) aan een veld
+  van het maandformulier. Piek/dal wordt voorgesteld op basis van de naam;
+  meerdere bronnen op één veld worden opgeteld. Eenheden (Wh, MWh, m³, L, ...)
+  worden omgerekend naar kWh, m³ en liter.
+- De add-on heeft daarvoor toegang tot de Home Assistant API nodig
+  (homeassistant_api). Herinstalleer of herbouw de add-on na de update.
+- Bedragen (€) uit de Engie-app komen niet uit Energie en vul je nog zelf in.
+
 ## 0.4.2
 - Tab Totaal: waterverbruik toegevoegd aan de grafieken per jaar en per maand,
   op dezelfde manier als op Overzicht: een lijn in m³ op een tweede Y-as
