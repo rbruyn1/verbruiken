@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2
+- Tab Totaal: waterverbruik toegevoegd aan de grafieken per jaar en per maand,
+  op dezelfde manier als op Overzicht: een lijn in m³ op een tweede Y-as
+  (rechts), bovenop de staven en niet gestapeld (water is geen energie). Met
+  een eigen knop "Water". Samen: één lijn voor alle gekozen woningen; bij
+  "opdelen per woning" een gestreepte lijn per woning in haar kleur. Maanden
+  of jaren zonder bijgehouden water tonen een gat, geen nulpunt.
+
 ## 0.4.1
 - Tab Totaal: injectie (kWh die naar het net gaat) toegevoegd als extra soort,
   met een eigen knop en kleur. Ze staat als negatieve staaf ONDER de nullijn,

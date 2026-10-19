@@ -4,6 +4,7 @@
 <h1>Totaal — alle woningen samen</h1>
 <p class="subtitle">Energie van de woningen opgeteld, om de evolutie over de jaren te volgen.
     Injectie (wat je naar het net stuurt) staat onder de nullijn, verbruik erboven.
+    Water (m³) staat als lijn op de rechteras: het is geen energie, dus het wordt niet gestapeld.
     * = onvolledig jaar (niet alle 12 maanden in de data).</p>
 
 <div class="filters">
@@ -15,7 +16,7 @@
     </div>
     <div class="filter-groep">
         <span class="filter-label">Soort</span>
-        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas"), ("inj", "Injectie")] %}
+        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas"), ("inj", "Injectie"), ("water", "Water")] %}
         <button type="button" class="chip actief" data-groep="soort" data-waarde="{{ id }}">{{ label }}</button>
         {% endfor %}
     </div>
@@ -47,7 +48,9 @@ const SOORTEN = [
     { id: "zelf", label: "Zelfverbruik zon",    kleur: KLEUR.zelf },
     { id: "gas",  label: "Gas",                 kleur: KLEUR.gas },
     // Injectie is geen verbruik: ze staat onder de nullijn (negatieve staaf).
-    { id: "inj",  label: "Injectie (naar het net)", kleur: KLEUR.inj, negatief: true }
+    { id: "inj",  label: "Injectie (naar het net)", kleur: KLEUR.inj, negatief: true },
+    // Water is geen energie: geen staaf, maar een lijn in m³ op de rechteras (zoals op Overzicht).
+    { id: "water", label: "Water (m³, rechteras)", kleur: KLEUR.water, lijn: true }
 ];
 const staat = {
     woning: new Set(DATA.woningen),
@@ -74,27 +77,45 @@ function som(groep, woningen, soorten) {
 function reeksen(groepen) {
     const woningen = DATA.woningen.filter(w => staat.woning.has(w));
     const soorten = SOORTEN.filter(s => staat.soort.has(s.id));
-    const verbruik = soorten.filter(s => !s.negatief);
-    const heeftInjectie = soorten.some(s => s.negatief);
+    const staven = soorten.filter(s => !s.lijn);
+    const verbruikIds = staven.filter(s => !s.negatief).map(s => s.id);
+    const heeftInjectie = staven.some(s => s.negatief);
+    const heeftWater = soorten.some(s => s.lijn);
     const teken = (v, negatief) => v === null ? null : (negatief ? -v : v);
+    const m3 = v => v === null ? null : Math.round(v) / 1000;          // liter -> m³
+    const punt = groepen.length > 30 ? 2 : 4;
+    const lijn = (label, kleur, data, streep) => ({
+        type: "line", label: label, data: data, yAxisID: "y2", order: 0,
+        borderColor: kleur, backgroundColor: kleur, borderWidth: 2, pointRadius: punt,
+        tension: 0.15, borderDash: streep ? [5, 4] : []
+    });
+    let sets;
     if (staat.opdeling === "soort") {
-        return soorten.map(s => ({
-            label: s.label, backgroundColor: s.kleur, stack: "energie",
+        sets = staven.map(s => ({
+            label: s.label, backgroundColor: s.kleur, stack: "energie", order: 1,
             data: groepen.map(g => teken(som(g, woningen, [s.id]), s.negatief))
         }));
+        if (heeftWater) {
+            sets.push(lijn("Water (m³, rechteras)", KLEUR.water,
+                groepen.map(g => m3(som(g, woningen, ["water"]))), false));
+        }
+        return sets;
     }
     // Per woning: het verbruik van elke woning boven de nullijn, haar injectie
-    // (zelfde kleur, doorzichtiger) eronder.
-    const verbruikIds = verbruik.map(s => s.id);
-    const sets = verbruikIds.length ? woningen.map(w => ({
-        label: w, backgroundColor: KLEUR.woning[w], stack: "energie",
+    // (zelfde kleur, doorzichtiger) eronder en haar water als gestreepte lijn.
+    sets = verbruikIds.length ? woningen.map(w => ({
+        label: w, backgroundColor: KLEUR.woning[w], stack: "energie", order: 1,
         data: groepen.map(g => som(g, [w], verbruikIds))
     })) : [];
     if (heeftInjectie) {
         woningen.forEach(w => sets.push({
-            label: w + " (injectie)", backgroundColor: KLEUR.woning[w] + "88", stack: "energie",
+            label: w + " (injectie)", backgroundColor: KLEUR.woning[w] + "88", stack: "energie", order: 1,
             data: groepen.map(g => teken(som(g, [w], ["inj"]), true))
         }));
+    }
+    if (heeftWater) {
+        woningen.forEach(w => sets.push(lijn(w + " (water, m³)", KLEUR.woning[w],
+            groepen.map(g => m3(som(g, [w], ["water"]))), true)));
     }
     return sets;
 }
@@ -117,6 +138,14 @@ function opties(titel, draaiLabels) {
                     lineWidth: (ctx) => Math.abs(ctx.tick.value) < 1e-9 ? 3 : 1
                 }
             }
+            ,
+            // Waterlijn in m³ op een tweede as (enkel zichtbaar als Water aan staat)
+            y2: {
+                display: false, position: "right", beginAtZero: true,
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: "Water (m³)", color: KLEUR.water },
+                ticks: { color: KLEUR.water }
+            }
         }
     };
 }
@@ -131,6 +160,9 @@ const maandChart = new Chart(document.getElementById("totaalMaandChart"), {
 });
 
 function bijwerken() {
+    const waterAan = staat.soort.has("water") && staat.woning.size > 0;
+    jaarChart.options.scales.y2.display = waterAan;
+    maandChart.options.scales.y2.display = waterAan;
     jaarChart.data.datasets = reeksen(jaarGroepen);
     maandChart.data.datasets = reeksen(maandGroepen);
     jaarChart.update();
