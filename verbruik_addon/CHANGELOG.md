@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+- Energie-koppeling: je kunt nu ook bronnen koppelen die niet in het Energiedashboard
+  staan. Onderaan de tabel staan drie lege rijen met een zoekveld over alle kWh/m³-statistieken
+  in Home Assistant (bv. `sensor.p1_total_power_import_t1` als piek, `_t2` als dal).
+
 ## 0.5.0
 - Maandwaarden overnemen uit het Energiedashboard van Home Assistant. In het
   maandformulier staat een knop "Overnemen uit Energie": die haalt de

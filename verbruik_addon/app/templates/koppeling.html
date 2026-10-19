@@ -36,9 +36,25 @@
             </select></td>
         </tr>
         {% endfor %}
+        {% for i in range(3) %}
+        <tr>
+            <td colspan="3"><input type="text" name="sid" list="alle-bronnen" placeholder="Extra bron zoeken, bv. p1_total_power_import_t1"
+                       autocomplete="off" style="width:100%"></td>
+            <td><select name="veld">
+                {% for waarde, label in velden %}
+                <option value="{{ waarde }}">{{ label }}</option>
+                {% endfor %}
+            </select></td>
+        </tr>
+        {% endfor %}
         </tbody>
     </table>
     </div>
+    <datalist id="alle-bronnen">
+        {% for a in alle %}<option value="{{ a.statistic_id }}">{{ a.naam }} ({{ a.eenheid }})</option>{% endfor %}
+    </datalist>
+    <p class="muted" style="font-size:0.8rem;">Staat je piek- of dalmeter niet in het Energiedashboard? Typ in een lege rij hieronder de
+        sensornaam en kies het veld. Er verschijnen drie lege rijen; na opslaan komen ze in de lijst bovenaan terug.</p>
     <p class="muted" style="font-size:0.8rem;">Meerdere bronnen op hetzelfde veld worden opgeteld (bv. twee omvormers).
         Totaal afname/export en gas in kWh worden daarna zoals altijd automatisch berekend. Bedragen (€) uit de Engie-app
         komen niet uit Energie en vul je nog zelf in.</p>

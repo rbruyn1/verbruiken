@@ -155,6 +155,21 @@ class HAClient:
             b["voorstel"] = voorstel(b["soort"], f'{b["statistic_id"]} {b["naam"]}')
         return bronnen
 
+    def alle_statistieken(self):
+        """Alle statistieken met een som (kWh, m3, L, ...) die de recorder bijhoudt, ook die
+        niet in het Energiedashboard staan. Zo kun je bv. losse piek/dal-sensoren koppelen."""
+        lijst = self.call("recorder/list_statistic_ids", statistic_type="sum") or []
+        keuzes = []
+        for m in lijst:
+            eenheid = m.get("statistics_unit_of_measurement")
+            if eenheid in ENERGIE_NAAR_KWH or eenheid in VOLUME_NAAR_M3:
+                keuzes.append({"statistic_id": m.get("statistic_id"), "eenheid": eenheid,
+                               "naam": m.get("name") or ""})
+        namen = self._namen({k["statistic_id"] for k in keuzes})
+        for k in keuzes:
+            k["naam"] = namen.get(k["statistic_id"]) or k["naam"] or k["statistic_id"]
+        return sorted(keuzes, key=lambda k: k["statistic_id"])
+
     # ---------- maandtotalen ----------
     def maand_waarden(self, koppeling, jaar, maand):
         """koppeling: lijst (statistic_id, veld). Geeft {'waarden': {formulierveld: waarde},

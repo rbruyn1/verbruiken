@@ -726,10 +726,14 @@ def koppeling():
         return redirect(url_for("koppeling", woning=woning))
 
     opgeslagen = dict(_koppeling(woning))
-    fout, bronnen = None, []
+    fout, bronnen, alle = None, [], []
     try:
         with HAClient(timeout=8) as ha:
             bronnen = ha.energie_bronnen()
+            try:
+                alle = ha.alle_statistieken()
+            except HAFout:
+                alle = []        # extra keuzelijst is optioneel
     except HAFout as e:
         fout = str(e)
 
@@ -743,7 +747,7 @@ def koppeling():
             rijen.append({"statistic_id": sid, "naam": sid, "soort": "niet (meer) in Energie",
                           "eenheid": None, "veld": veld, "bekend": False})
     return render_template("koppeling.html", woningen=WONINGEN, woning=woning, rijen=rijen,
-                           velden=KOPPEL_VELDEN, fout=fout)
+                           velden=KOPPEL_VELDEN, fout=fout, alle=alle)
 
 
 @app.route("/energie/maand")
