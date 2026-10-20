@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6
+- Fix: "Overnemen uit Energie" gaf voor een afgelopen maand de waarden van die maand plus de
+  lopende maand erbij (bv. september + oktober tot nu). HA geeft de maandbucket die op de einddatum
+  begint ook terug. De query eindigt nu 1 seconde vóór het einde van de maand en er worden enkel
+  buckets opgeteld die in de gevraagde maand beginnen.
+
 ## 0.5.5
 - Standaardkoppeling Tienen uitgebreid met de zonopbrengst (`sensor.solaredge_ac_energy_kwh`).
   Standaardbronnen worden per veld één keer gezet, enkel als dat veld nog leeg is: wat je zelf

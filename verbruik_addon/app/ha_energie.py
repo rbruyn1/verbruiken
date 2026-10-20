@@ -12,7 +12,7 @@ ingevuld nadat je op "Overnemen uit Energie" klikt.
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 try:
@@ -180,15 +180,33 @@ class HAClient:
         eind = datetime(jaar + (maand == 12), maand % 12 + 1, 1, tzinfo=tz)
         ids = sorted({sid for sid, _ in koppeling})
         eenheden = self._eenheden(ids)
+        # LET OP: HA neemt de grens van end_time mee (de maandbucket die precies op end_time begint,
+        # dus de volgende maand, kwam er ook bij). Daarom eindigen we 1 seconde eerder en houden we
+        # daarna alleen de buckets over die effectief in de gevraagde maand beginnen.
         stats = self.call(
             "recorder/statistics_during_period",
-            start_time=start.isoformat(), end_time=eind.isoformat(),
+            start_time=start.isoformat(), end_time=(eind - timedelta(seconds=1)).isoformat(),
             statistic_ids=ids, period="month", types=["change"],
         ) or {}
+        start_ts, eind_ts = start.timestamp(), eind.timestamp()
+
+        def in_maand(bucket):
+            b = bucket.get("start")
+            if isinstance(b, str):
+                try:
+                    b = datetime.fromisoformat(b.replace("Z", "+00:00")).timestamp()
+                except ValueError:
+                    return True
+            elif isinstance(b, (int, float)):
+                b = b / 1000 if b > 1e11 else b      # HA geeft milliseconden
+            else:
+                return True                           # onbekend formaat: niet wegfilteren
+            return start_ts - 1 <= b < eind_ts
 
         uit = {}
         for sid, veld in koppeling:
-            delen = [b.get("change") for b in (stats.get(sid) or []) if b.get("change") is not None]
+            delen = [b.get("change") for b in (stats.get(sid) or [])
+                     if in_maand(b) and b.get("change") is not None]
             if not delen:
                 waarschuwingen.append(f"Geen gegevens voor {sid} in {maand}/{jaar}.")
                 continue
