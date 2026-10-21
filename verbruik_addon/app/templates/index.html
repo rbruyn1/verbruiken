@@ -188,10 +188,10 @@ new Chart(document.getElementById("jaartotalenChart"), {
 new Chart(document.getElementById("jaartotalenEnergieChart"), {
     type: "bar",
     data: { labels: jaarLabels, datasets: [
-        { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: KLEUR.piek, stack: "energie" },
-        { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: KLEUR.dal, stack: "energie" },
-        { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: KLEUR.zelf, stack: "energie" },
-        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: KLEUR.gas, stack: "energie" }] : []),
+        { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: KLEUR.piek, stack: "energie", order: 1 },
+        { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: KLEUR.dal, stack: "energie", order: 1 },
+        { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: KLEUR.zelf, stack: "energie", order: 1 },
+        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: KLEUR.gas, stack: "energie", order: 1 }] : []),
         ...euroLijnen
     ]},
     options: {

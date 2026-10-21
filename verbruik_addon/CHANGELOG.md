@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+- Fix: in "Jaartotalen — totaal energieverbruik" stonden de prijslijnen (€) achter de staven.
+  De staven krijgen nu dezelfde tekenvolgorde als in de andere jaargrafiek, zodat de lijnen bovenop liggen.
+
 ## 0.6.0
 - Jaarlijkse energieprijs (€) voor elektriciteit en gas als lijnen op een extra as rechts, naast de kWh-staven:
   - per woning in beide jaargrafieken op de hoofdpagina ("Jaartotalen" en "Jaartotalen — totaal energieverbruik")
