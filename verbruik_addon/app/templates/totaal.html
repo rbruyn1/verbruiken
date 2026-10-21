@@ -156,14 +156,14 @@ function opties(titel, draaiLabels) {
                 display: false, position: "right", beginAtZero: true,
                 grid: { drawOnChartArea: false },
                 title: { display: true, text: "Water (m³)", color: KLEUR.water },
-                ticks: { color: KLEUR.water }
+                ticks: { color: KLEUR.water, callback: v => v < 0 ? "" : v }   // geen "negatief water" tonen
             },
             // Energieprijs in € op een extra as rechts (enkel in de jaargrafiek, enkel als een €-soort aan staat)
             y3: {
                 display: false, position: "right", beginAtZero: true,
                 grid: { drawOnChartArea: false },
                 title: { display: true, text: "Energieprijs (€)", color: KLEUR.eur_elek },
-                ticks: { color: KLEUR.eur_elek, callback: v => "€ " + v }
+                ticks: { color: KLEUR.eur_elek, callback: v => v < 0 ? "" : "€ " + v }
             }
         }
     };
@@ -178,6 +178,45 @@ const maandChart = new Chart(document.getElementById("totaalMaandChart"), {
     options: opties("Totaal energieverbruik per maand (kWh)", true)
 });
 
+// De linkeras heeft negatieve waarden (injectie) en de rechter-assen (water, €) niet: zonder ingreep staan
+// hun nullijnen op een andere hoogte en lijkt water "negatief". Daarom nemen we de gridlijnen van de
+// linkeras over: dezelfde nullijn, hetzelfde aantal stappen boven en onder nul, met een mooie stap.
+function mooieStap(min) {
+    const e = Math.pow(10, Math.floor(Math.log10(min)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * e >= min * (1 - 1e-9)) return m * e;
+    return 10 * e;
+}
+function resetAssen(chart) {
+    for (const id of ["y2", "y3"]) {
+        const as = chart.options.scales[id];
+        delete as.min; delete as.max; delete as.ticks.stepSize;
+    }
+}
+function alignNul(chart) {
+    const y = chart.scales.y;
+    const waarden = y.ticks.map(t => t.value);
+    if (waarden.length < 2) return;
+    const stap = waarden[1] - waarden[0];
+    if (!(stap > 0)) return;
+    const k = Math.max(0, Math.round(-y.min / stap));        // gridstappen onder de nullijn
+    const n = Math.round((y.max - y.min) / stap);            // gridstappen in totaal
+    for (const id of ["y2", "y3"]) {
+        const as = chart.options.scales[id];
+        if (!as.display) continue;
+        let hi = 0, lo = 0;
+        chart.data.datasets.forEach((d, i) => {
+            if ((d.yAxisID || "y") !== id || !chart.isDatasetVisible(i)) return;
+            for (const v of d.data) if (v !== null && v !== undefined) { hi = Math.max(hi, v); lo = Math.min(lo, v); }
+        });
+        let st = 0;
+        if (n - k > 0 && hi > 0) st = Math.max(st, hi / (n - k));
+        if (k > 0 && lo < 0) st = Math.max(st, -lo / k);
+        if (st <= 0) continue;
+        st = mooieStap(st);
+        as.min = -k * st; as.max = (n - k) * st; as.ticks.stepSize = st;
+    }
+}
+
 function bijwerken() {
     const waterAan = staat.soort.has("water") && staat.woning.size > 0;
     jaarChart.options.scales.y2.display = waterAan;
@@ -186,8 +225,8 @@ function bijwerken() {
     jaarChart.options.scales.y3.display = euroAan;
     jaarChart.data.datasets = reeksen(jaarGroepen, true);
     maandChart.data.datasets = reeksen(maandGroepen, false);
-    jaarChart.update();
-    maandChart.update();
+    // Eerst laten tekenen om de linkeras te kennen, dan de rechter-assen daarop afstemmen.
+    [jaarChart, maandChart].forEach(c => { resetAssen(c); c.update("none"); alignNul(c); c.update(); });
     const leeg = staat.woning.size === 0 || staat.soort.size === 0;
     document.getElementById("leeg").style.display = leeg ? "" : "none";
 }

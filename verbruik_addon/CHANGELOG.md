@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.2
+- Tab Totaal: de nullijn van de linkeras (kWh, met injectie eronder) en van de rechter-assen (water m³, energieprijs €)
+  staan nu op dezelfde hoogte, en hun gridlijnen vallen samen. Water leek "negatief" doordat de assen een andere nul hadden.
+  Negatieve tellers op de rechter-assen worden niet meer getoond.
+
 ## 0.6.1
 - Fix: in "Jaartotalen — totaal energieverbruik" stonden de prijslijnen (€) achter de staven.
   De staven krijgen nu dezelfde tekenvolgorde als in de andere jaargrafiek, zodat de lijnen bovenop liggen.
