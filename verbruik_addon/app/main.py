@@ -188,12 +188,17 @@ def _jaartotalen(woning):
                   SUM(gas_kwh) as gas,
                   SUM(zonopbrengst_totaal) as zon,
                   SUM(totaal_export) as export,
-                  SUM(water_l) as water
+                  SUM(water_l) as water,
+                  SUM(engie_afname_eur) as elek_eur,
+                  SUM(prijs_gas_eur) as gas_eur
            FROM maandverbruik WHERE woning=? GROUP BY jaar ORDER BY jaar""",
         (woning,),
     ).fetchall()
     conn.close()
     return {
+        # Jaarlijkse energieprijs in € (som van de maanden); 0 = niet bijgehouden, dus een gat.
+        "jaar_elek_eur": [round(r["elek_eur"], 2) if r["elek_eur"] else None for r in rows],
+        "jaar_gas_eur": [round(r["gas_eur"], 2) if r["gas_eur"] else None for r in rows],
         "jaar_labels": [str(r["jaar"]) for r in rows],
         "jaar_elektriciteit": [r["afname"] for r in rows],
         "jaar_gas": [r["gas"] for r in rows],
@@ -655,7 +660,8 @@ def totaal():
     conn = get_connection()
     rows = conn.execute(
         """SELECT woning, jaar, maand, piek_verbruik, dal_verbruik,
-                  zonopbrengst_totaal, totaal_export, gas_kwh, water_l
+                  zonopbrengst_totaal, totaal_export, gas_kwh, water_l,
+                  engie_afname_eur, prijs_gas_eur
            FROM maandverbruik ORDER BY jaar, maand"""
     ).fetchall()
     conn.close()
@@ -663,7 +669,7 @@ def totaal():
     woningen = [w for w in WONINGEN if any(r["woning"] == w for r in rows)]
     sleutels = sorted({(r["jaar"], r["maand"]) for r in rows})
     index = {s: i for i, s in enumerate(sleutels)}
-    reeks = {w: {s: [None] * len(sleutels) for s in ("piek", "dal", "zelf", "gas", "inj", "water")} for w in woningen}
+    reeks = {w: {s: [None] * len(sleutels) for s in ("piek", "dal", "zelf", "gas", "inj", "water", "elek_eur", "gas_eur")} for w in woningen}
     for r in rows:
         i = index[(r["jaar"], r["maand"])]
         d = reeks[r["woning"]]
@@ -672,6 +678,8 @@ def totaal():
         d["gas"][i] = r["gas_kwh"]
         d["inj"][i] = r["totaal_export"]   # kWh naar het net gestuurd
         d["water"][i] = r["water_l"] if r["water_l"] else None   # liter; 0 = niet bijgehouden
+        d["elek_eur"][i] = r["engie_afname_eur"] if r["engie_afname_eur"] else None   # €; 0 = niet bijgehouden
+        d["gas_eur"][i] = r["prijs_gas_eur"] if r["prijs_gas_eur"] else None
         if r["zonopbrengst_totaal"] is not None:
             # zelfverbruik zon = opbrengst min wat naar het net gaat
             d["zelf"][i] = r["zonopbrengst_totaal"] - (r["totaal_export"] or 0)

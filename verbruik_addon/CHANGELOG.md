@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+- Jaarlijkse energieprijs (€) voor elektriciteit en gas als lijnen op een extra as rechts, naast de kWh-staven:
+  - per woning in beide jaargrafieken op de hoofdpagina ("Jaartotalen" en "Jaartotalen — totaal energieverbruik")
+  - op de tab Totaal in de jaargrafiek, met twee nieuwe knoppen "Elektriciteit €" en "Gas €"
+    (bij "opdelen per woning" één prijslijn per woning: elektriciteit + gas van de aangevinkte soorten samen)
+- De prijs is de som van de maandelijkse "Engie afname (€)" en "Gasbedrag (€)". Een jaarwaarde die je in het
+  jaaroverzicht zelf overschrijft, wordt in de grafieken niet gebruikt.
+
 ## 0.5.6
 - Fix: "Overnemen uit Energie" gaf voor een afgelopen maand de waarden van die maand plus de
   lopende maand erbij (bv. september + oktober tot nu). HA geeft de maandbucket die op de einddatum

@@ -4,7 +4,8 @@
 <h1>Totaal — alle woningen samen</h1>
 <p class="subtitle">Energie van de woningen opgeteld, om de evolutie over de jaren te volgen.
     Injectie (wat je naar het net stuurt) staat onder de nullijn, verbruik erboven.
-    Water (m³) staat als lijn op de rechteras: het is geen energie, dus het wordt niet gestapeld.
+    Water (m³) en de energieprijs (€, elektriciteit en gas, enkel in de jaargrafiek) staan als lijnen op de rechteras:
+    het is geen energie, dus ze worden niet gestapeld.
     * = onvolledig jaar (niet alle 12 maanden in de data).</p>
 
 <div class="filters">
@@ -16,7 +17,7 @@
     </div>
     <div class="filter-groep">
         <span class="filter-label">Soort</span>
-        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas"), ("inj", "Injectie"), ("water", "Water")] %}
+        {% for id, label in [("piek", "Piek (net)"), ("dal", "Dal (net)"), ("zelf", "Zelfverbruik zon"), ("gas", "Gas"), ("inj", "Injectie"), ("water", "Water"), ("elek_eur", "Elektriciteit €"), ("gas_eur", "Gas €")] %}
         <button type="button" class="chip actief" data-groep="soort" data-waarde="{{ id }}">{{ label }}</button>
         {% endfor %}
     </div>
@@ -50,7 +51,10 @@ const SOORTEN = [
     // Injectie is geen verbruik: ze staat onder de nullijn (negatieve staaf).
     { id: "inj",  label: "Injectie (naar het net)", kleur: KLEUR.inj, negatief: true },
     // Water is geen energie: geen staaf, maar een lijn in m³ op de rechteras (zoals op Overzicht).
-    { id: "water", label: "Water (m³, rechteras)", kleur: KLEUR.water, lijn: true }
+    { id: "water", label: "Water (m³, rechteras)", kleur: KLEUR.water, lijn: true, as: "y2" },
+    // Energieprijs in €: ook een lijn op een (tweede) rechteras, enkel in de jaargrafiek.
+    { id: "elek_eur", label: "Elektriciteit (€, rechteras)", kleur: KLEUR.eur_elek, lijn: true, as: "y3", euro: true },
+    { id: "gas_eur",  label: "Gas (€, rechteras)",           kleur: KLEUR.eur_gas,  lijn: true, as: "y3", euro: true }
 ];
 const staat = {
     woning: new Set(DATA.woningen),
@@ -74,18 +78,19 @@ function som(groep, woningen, soorten) {
     return heeftData ? totaal : null;
 }
 
-function reeksen(groepen) {
+function reeksen(groepen, metEuro) {
     const woningen = DATA.woningen.filter(w => staat.woning.has(w));
-    const soorten = SOORTEN.filter(s => staat.soort.has(s.id));
+    const soorten = SOORTEN.filter(s => staat.soort.has(s.id) && (metEuro || !s.euro));
     const staven = soorten.filter(s => !s.lijn);
     const verbruikIds = staven.filter(s => !s.negatief).map(s => s.id);
     const heeftInjectie = staven.some(s => s.negatief);
-    const heeftWater = soorten.some(s => s.lijn);
+    const heeftWater = soorten.some(s => s.id === "water");
+    const euroIds = soorten.filter(s => s.euro).map(s => s.id);
     const teken = (v, negatief) => v === null ? null : (negatief ? -v : v);
     const m3 = v => v === null ? null : Math.round(v) / 1000;          // liter -> m³
     const punt = groepen.length > 30 ? 2 : 4;
-    const lijn = (label, kleur, data, streep) => ({
-        type: "line", label: label, data: data, yAxisID: "y2", order: 0,
+    const lijn = (label, kleur, data, streep, as) => ({
+        type: "line", label: label, data: data, yAxisID: as || "y2", order: 0,
         borderColor: kleur, backgroundColor: kleur, borderWidth: 2, pointRadius: punt,
         tension: 0.15, borderDash: streep ? [5, 4] : []
     });
@@ -99,6 +104,8 @@ function reeksen(groepen) {
             sets.push(lijn("Water (m³, rechteras)", KLEUR.water,
                 groepen.map(g => m3(som(g, woningen, ["water"]))), false));
         }
+        soorten.filter(s => s.euro).forEach(s => sets.push(
+            lijn(s.label, s.kleur, groepen.map(g => som(g, woningen, [s.id])), true, "y3")));
         return sets;
     }
     // Per woning: het verbruik van elke woning boven de nullijn, haar injectie
@@ -116,6 +123,11 @@ function reeksen(groepen) {
     if (heeftWater) {
         woningen.forEach(w => sets.push(lijn(w + " (water, m³)", KLEUR.woning[w],
             groepen.map(g => m3(som(g, [w], ["water"]))), true)));
+    }
+    // Energieprijs per woning: één lijn per woning (elektriciteit + gas van de gekozen soorten samen).
+    if (euroIds.length) {
+        woningen.forEach(w => sets.push(lijn(w + " (energieprijs, €)", KLEUR.woning[w],
+            groepen.map(g => som(g, [w], euroIds)), true, "y3")));
     }
     return sets;
 }
@@ -145,6 +157,13 @@ function opties(titel, draaiLabels) {
                 grid: { drawOnChartArea: false },
                 title: { display: true, text: "Water (m³)", color: KLEUR.water },
                 ticks: { color: KLEUR.water }
+            },
+            // Energieprijs in € op een extra as rechts (enkel in de jaargrafiek, enkel als een €-soort aan staat)
+            y3: {
+                display: false, position: "right", beginAtZero: true,
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: "Energieprijs (€)", color: KLEUR.eur_elek },
+                ticks: { color: KLEUR.eur_elek, callback: v => "€ " + v }
             }
         }
     };
@@ -152,7 +171,7 @@ function opties(titel, draaiLabels) {
 
 const jaarChart = new Chart(document.getElementById("totaalJaarChart"), {
     type: "bar", data: { labels: jaarLabels, datasets: [] },
-    options: opties("Totaal energieverbruik per jaar (kWh)", false)
+    options: opties("Totaal energieverbruik per jaar (kWh) en energieprijs (€)", false)
 });
 const maandChart = new Chart(document.getElementById("totaalMaandChart"), {
     type: "bar", data: { labels: DATA.labels, datasets: [] },
@@ -163,8 +182,10 @@ function bijwerken() {
     const waterAan = staat.soort.has("water") && staat.woning.size > 0;
     jaarChart.options.scales.y2.display = waterAan;
     maandChart.options.scales.y2.display = waterAan;
-    jaarChart.data.datasets = reeksen(jaarGroepen);
-    maandChart.data.datasets = reeksen(maandGroepen);
+    const euroAan = (staat.soort.has("elek_eur") || staat.soort.has("gas_eur")) && staat.woning.size > 0;
+    jaarChart.options.scales.y3.display = euroAan;
+    jaarChart.data.datasets = reeksen(jaarGroepen, true);
+    maandChart.data.datasets = reeksen(maandGroepen, false);
     jaarChart.update();
     maandChart.update();
     const leeg = staat.woning.size === 0 || staat.soort.size === 0;

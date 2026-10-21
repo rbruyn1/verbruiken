@@ -78,6 +78,8 @@ const jaarZon = {{ jaar_zon | tojson }};
 const jaarPiek = {{ jaar_piek | tojson }};
 const jaarDal = {{ jaar_dal | tojson }};
 const jaarGas = {{ jaar_gas | tojson }};
+const jaarElekEur = {{ jaar_elek_eur | tojson }};
+const jaarGasEur = {{ jaar_gas_eur | tojson }};
 const jaarZelfverbruik = {{ jaar_zelfverbruik | tojson }};
 
 Chart.defaults.color = "#6b7280";
@@ -137,7 +139,24 @@ new Chart(document.getElementById("verschilChart"), {
     }
 });
 
+// Jaarlijkse energieprijs (€) als lijnen op een extra as rechts, naast de kWh-staven.
+const euroLijn = (label, data, kleur) => ({
+    type: "line", order: 0, label: label, data: data, yAxisID: "y3",
+    borderColor: kleur, backgroundColor: kleur, borderWidth: 2, pointRadius: 4,
+    tension: 0.15, borderDash: [6, 3]
+});
+const euroLijnen = [
+    ...(jaarElekEur.some(v => v) ? [euroLijn("Elektriciteit (€, rechteras)", jaarElekEur, KLEUR.eur_elek)] : []),
+    ...(heeftGas && jaarGasEur.some(v => v) ? [euroLijn("Gas (€, rechteras)", jaarGasEur, KLEUR.eur_gas)] : [])
+];
+const euroSchaal = {
+    position: "right", beginAtZero: true,
+    grid: { drawOnChartArea: false },
+    title: { display: true, text: "Energieprijs (€)", color: KLEUR.eur_elek },
+    ticks: { color: KLEUR.eur_elek, callback: v => "€ " + v }
+};
 const jaarSchalen = { y: { beginAtZero: true, title: { display: true, text: "kWh" } } };
+if (euroLijnen.length) jaarSchalen.y3 = euroSchaal;
 if (heeftWater) {
     jaarSchalen.y2 = {
         position: "right",
@@ -155,7 +174,8 @@ new Chart(document.getElementById("jaartotalenChart"), {
         { label: "Zonopbrengst (kWh)", order: 1, data: jaarZon, backgroundColor: KLEUR.zon },
         ...(heeftWater ? [{ type: "line", order: 0, label: "Water (m³, rechteras)", data: jaarWater, yAxisID: "y2",
                             borderColor: KLEUR.water, backgroundColor: KLEUR.water,
-                            borderWidth: 2, pointRadius: 4, tension: 0.15 }] : [])
+                            borderWidth: 2, pointRadius: 4, tension: 0.15 }] : []),
+        ...euroLijnen
     ]},
     options: {
         responsive: true,
@@ -171,13 +191,15 @@ new Chart(document.getElementById("jaartotalenEnergieChart"), {
         { label: "Piek verbruik (net)", data: jaarPiek, backgroundColor: KLEUR.piek, stack: "energie" },
         { label: "Dal verbruik (net)", data: jaarDal, backgroundColor: KLEUR.dal, stack: "energie" },
         { label: "Zelfverbruik zon", data: jaarZelfverbruik, backgroundColor: KLEUR.zelf, stack: "energie" },
-        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: KLEUR.gas, stack: "energie" }] : [])
+        ...(heeftGas ? [{ label: "Gas", data: jaarGas, backgroundColor: KLEUR.gas, stack: "energie" }] : []),
+        ...euroLijnen
     ]},
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { title: { display: true, text: "Jaartotalen — totaal energieverbruik (kWh)", color: "#1c1f24", font: { size: 16 } } },
-        scales: { x: { stacked: true }, y: { stacked: true } }
+        plugins: { title: { display: true, text: "Jaartotalen — totaal energieverbruik (kWh) en energieprijs (€)", color: "#1c1f24", font: { size: 16 } } },
+        scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: "kWh" } },
+                  ...(euroLijnen.length ? { y3: euroSchaal } : {}) }
     }
 });
 
